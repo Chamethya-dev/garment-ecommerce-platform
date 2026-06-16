@@ -21,9 +21,12 @@ def create_app(config_class=Config):
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
 
-    # Register blueprints (We will create these in Sprint 3)
-    # from app.routes import main
-    # app.register_blueprint(main)
+    # Register Blueprints
+    from app.auth import auth
+    app.register_blueprint(auth)
+
+    from app.routes import main
+    app.register_blueprint(main)
 
     return app
 

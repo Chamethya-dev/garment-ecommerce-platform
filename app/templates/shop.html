@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Shop - Garment Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar Filters -->
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('main.shop') }}">
+                    <!-- Search -->
+                    <div class="mb-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" placeholder="Product name..." value="{{ search_term }}">
+                    </div>
+                    
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.category_id }}" {% if selected_category == cat.category_id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Price Range -->
+                    <div class="mb-3">
+                        <label class="form-label">Min Price (Rs.)</label>
+                        <input type="number" name="min_price" class="form-control" placeholder="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max Price (Rs.)</label>
+                        <input type="number" name="max_price" class="form-control" placeholder="10000">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    <a href="{{ url_for('main.shop') }}" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Grid -->
+    <div class="col-md-9">
+        <h2 class="mb-4">
+            {% if search_term %}Search Results for "{{ search_term }}"
+            {% elif selected_category %}{{ categories|selectattr('category_id', 'equalto', selected_category)|map(attribute='name')|first }}
+            {% else %}All Products{% endif %}
+        </h2>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 250px;">
+                            <span>No Image</span>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted small">{{ product.category.name }}</p>
+                        <p class="card-text">
+                            {% if product.sale_price %}
+                                <span class="text-decoration-line-through text-muted">Rs. {{ product.regular_price }}</span><br>
+                                <span class="text-danger fw-bold">Rs. {{ product.sale_price }}</span>
+                            {% else %}
+                                <span class="fw-bold">Rs. {{ product.regular_price }}</span>
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="btn btn-primary w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <p class="mb-0">No products found matching your criteria.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,11 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Home - Garment Store{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h1>Welcome to the Garment Store!</h1>
-    <p class="lead">You are successfully logged in as {{ current_user.name }}.</p>
-    <hr>
-    <p>This is the MVP Home Page. Product catalog coming in Sprint 5!</p>
+<!-- Hero Section -->
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <h1 class="display-4 fw-bold">Welcome to Garment Store</h1>
+    <p class="col-md-8 fs-5 mx-auto">Discover the latest fashion trends with our premium collection of garments.</p>
+    <a href="{{ url_for('main.shop') }}" class="btn btn-primary btn-lg mt-3">Shop Now</a>
+</div>
+
+<!-- Featured Products -->
+<h2 class="mb-4">Featured Products</h2>
+<div class="row">
+    {% for product in featured_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            {% if product.images %}
+                <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="card-img-top" alt="{{ product.name }}">
+            {% else %}
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span>No Image</span>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <p class="card-text text-muted">{{ product.category.name }}</p>
+                <p class="card-text">
+                    {% if product.sale_price %}
+                        <span class="text-decoration-line-through text-muted">Rs. {{ product.regular_price }}</span>
+                        <span class="text-danger fw-bold">Rs. {{ product.sale_price }}</span>
+                    {% else %}
+                        <span class="fw-bold">Rs. {{ product.regular_price }}</span>
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="btn btn-outline-primary w-100">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <p class="text-center text-muted">No products available yet. Check back soon!</p>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

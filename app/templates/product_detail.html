@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - Garment Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Product Image -->
+    <div class="col-md-6">
+        {% if product.images %}
+            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="img-fluid rounded" alt="{{ product.name }}">
+        {% else %}
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                <h3>No Image Available</h3>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Product Details -->
+    <div class="col-md-6">
+        <h1 class="mb-3">{{ product.name }}</h1>
+        <p class="text-muted">Category: {{ product.category.name }}</p>
+        
+        <div class="mb-3">
+            {% if product.sale_price %}
+                <h3 class="text-danger">Rs. {{ product.sale_price }}</h3>
+                <p class="text-decoration-line-through text-muted">Rs. {{ product.regular_price }}</p>
+            {% else %}
+                <h3>Rs. {{ product.regular_price }}</h3>
+            {% endif %}
+        </div>
+        
+        <div class="mb-4">
+            <h5>Description</h5>
+            <p>{{ product.description or 'No description available.' }}</p>
+        </div>
+        
+        <!-- Variants (Sizes & Colors) -->
+        {% if variants %}
+        <div class="mb-4">
+            <h5>Available Sizes</h5>
+            <div class="d-flex gap-2">
+                {% for size in sizes %}
+                <span class="badge bg-secondary">{{ size }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <h5>Available Colors</h5>
+            <div class="d-flex gap-2">
+                {% for color in colors %}
+                <span class="badge bg-secondary">{{ color }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <p class="mb-0">This product currently has no variants (sizes/colors) available. Please check back later or contact us for custom orders.</p>
+        </div>
+        {% endif %}
+        
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-lg" {% if not variants %}disabled{% endif %}>
+                {% if variants %}Add to Cart{% else %}Out of Stock{% endif %}
+            </button>
+            <a href="{{ url_for('main.shop') }}" class="btn btn-outline-secondary">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

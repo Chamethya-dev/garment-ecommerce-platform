@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.models import Product, Category, ProductVariant, ProductImage, Order, User
 from app.auth import admin_required
+from collections import defaultdict
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -19,8 +20,6 @@ def dashboard():
     total_categories = Category.query.count()
     total_orders = Order.query.count()
     low_stock_variants = ProductVariant.query.filter(ProductVariant.stock_quantity < 10).count()
-    
-    # Get recent orders
     recent_orders = Order.query.order_by(Order.order_date.desc()).limit(10).all()
     
     return render_template('admin/dashboard.html', 
@@ -49,27 +48,21 @@ def add_product():
         regular_price = request.form.get('regular_price')
         sale_price = request.form.get('sale_price') or None
         
-        new_product = Product(
-            name=name, category_id=category_id, description=description,
-            regular_price=regular_price, sale_price=sale_price
-        )
+        new_product = Product(name=name, category_id=category_id, description=description, regular_price=regular_price, sale_price=sale_price)
         db.session.add(new_product)
         db.session.commit()
 
-        # Handle Image Upload
         file = request.files.get('image')
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            
             img = ProductImage(product_id=new_product.product_id, image_url=filename, is_primary=True)
             db.session.add(img)
             db.session.commit()
 
         flash('Product added successfully!', 'success')
         return redirect(url_for('admin.products'))
-
     return render_template('admin/add_product.html', categories=categories)
 
 @admin.route('/category/add', methods=['POST'])
@@ -104,10 +97,8 @@ def order_detail(order_id):
 def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     new_status = request.form.get('status')
-    
     order.status = new_status
     db.session.commit()
-    
     flash(f'Order #{order_id} status updated to {new_status}', 'success')
     return redirect(url_for('admin.order_detail', order_id=order_id))
 
@@ -115,8 +106,47 @@ def update_order_status(order_id):
 @login_required
 @admin_required
 def inventory():
-    # Get all variants with stock < 10 (low stock)
     low_stock = ProductVariant.query.filter(ProductVariant.stock_quantity < 10).all()
-    # Get all variants
     all_variants = ProductVariant.query.all()
     return render_template('admin/inventory.html', low_stock=low_stock, all_variants=all_variants)
+
+# --- NEW: ANALYTICS ROUTE ---
+@admin.route('/analytics')
+@login_required
+@admin_required
+def analytics():
+    # Get all orders (you can filter by status='Delivered' if you only want completed sales)
+    orders = Order.query.all()
+    
+    total_revenue = sum(float(order.total_amount) for order in orders)
+    total_orders = len(orders)
+    
+    # Calculate Revenue over time (grouped by date)
+    revenue_by_date = defaultdict(float)
+    for order in orders:
+        date_str = order.order_date.strftime('%Y-%m-%d')
+        revenue_by_date[date_str] += float(order.total_amount)
+        
+    # Sort by date
+    sorted_dates = sorted(revenue_by_date.keys())
+    chart_labels = sorted_dates
+    chart_data = [revenue_by_date[date] for date in sorted_dates]
+
+    # Calculate Top Selling Products
+    product_sales = defaultdict(int)
+    for order in orders:
+        for item in order.items:
+            product_sales[item.variant.product.name] += item.quantity
+            
+    # Sort and get top 5
+    sorted_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_product_labels = [p[0] for p in sorted_products]
+    top_product_data = [p[1] for p in sorted_products]
+
+    return render_template('admin/analytics.html', 
+                           total_revenue=total_revenue, 
+                           total_orders=total_orders,
+                           chart_labels=chart_labels,
+                           chart_data=chart_data,
+                           top_product_labels=top_product_labels,
+                           top_product_data=top_product_data)

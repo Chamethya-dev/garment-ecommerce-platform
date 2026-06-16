@@ -34,6 +34,9 @@ def create_app(config_class=Config):
     from app.admin import admin
     app.register_blueprint(admin)
 
+    from app.cart import cart 
+    app.register_blueprint(cart)
+
     return app
 
 from app import models

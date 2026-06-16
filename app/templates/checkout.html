@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<h2>Checkout</h2>
+<div class="row">
+    <div class="col-md-8">
+        <form action="{{ url_for('cart.place_order') }}" method="POST">
+            <div class="mb-3">
+                <label class="form-label">Shipping Address</label>
+                <textarea name="shipping_address" class="form-control" rows="3" required>{{ current_user.default_district or '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Select Delivery Zone</label>
+                <select name="delivery_fee" id="zoneSelect" class="form-select" required onchange="updateTotal()">
+                    <option value="0" data-name="Select Zone">Select Zone</option>
+                    {% for zone in zones %}
+                        <option value="{{ zone.delivery_fee }}" data-name="{{ zone.zone_name }}">{{ zone.zone_name }} - Rs. {{ zone.delivery_fee }}</option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="shipping_district" id="districtInput">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">Place Order</button>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h4>Order Summary</h4>
+                <p>Subtotal: Rs. {{ total }}</p>
+                <p>Delivery Fee: Rs. <span id="deliveryFee">0</span></p>
+                <hr>
+                <h3>Total: Rs. <span id="grandTotal">{{ total }}</span></h3>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function updateTotal() {
+        const select = document.getElementById('zoneSelect');
+        const fee = select.value;
+        const name = select.options[select.selectedIndex].getAttribute('data-name');
+        const subtotal = {{ total }};
+        document.getElementById('deliveryFee').innerText = fee;
+        document.getElementById('grandTotal').innerText = subtotal + parseFloat(fee);
+        document.getElementById('districtInput').value = name;
+    }
+</script>
+{% endblock %}

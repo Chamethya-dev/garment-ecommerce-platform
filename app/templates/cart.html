@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart{% endblock %}
+{% block content %}
+<h2>Shopping Cart</h2>
+{% if items %}
+<table class="table">
+    <thead><tr><th>Product</th><th>Variant</th><th>Price</th><th>Quantity</th><th>Subtotal</th><th>Action</th></tr></thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.variant.product.name }}</td>
+            <td>{{ item.variant.color }} - {{ item.variant.size }}</td>
+            <td>Rs. {{ item.price }}</td>
+            <td>
+                <form action="{{ url_for('cart.update_cart') }}" method="POST" class="d-flex">
+                    <input type="hidden" name="variant_id" value="{{ item.variant.variant_id }}">
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="0" class="form-control form-control-sm" style="width: 70px;">
+                    <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Update</button>
+                </form>
+            </td>
+            <td>Rs. {{ item.subtotal }}</td>
+            <td><a href="{{ url_for('cart.remove_from_cart', variant_id=item.variant.variant_id) }}" class="btn btn-sm btn-danger">Remove</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="text-end">
+    <h3>Total: Rs. {{ total }}</h3>
+    <a href="{{ url_for('cart.checkout') }}" class="btn btn-success btn-lg mt-3">Proceed to Checkout</a>
+</div>
+{% else %}
+<div class="alert alert-info">Your cart is empty. <a href="{{ url_for('main.shop') }}">Go shopping!</a></div>
+{% endif %}
+{% endblock %}

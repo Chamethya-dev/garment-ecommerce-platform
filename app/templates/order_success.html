@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Order Success{% endblock %}
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="text-success">Order Placed Successfully!</h1>
+    <p class="lead">Thank you for your purchase. Your Order ID is: <strong>#{{ order_id }}</strong></p>
+    <p>We will process your order shortly.</p>
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary mt-3">Return to Home</a>
+</div>
+{% endblock %}

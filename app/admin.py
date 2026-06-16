@@ -6,6 +6,7 @@ from app import db
 from app.models import Product, Category, ProductVariant, ProductImage, Order, User
 from app.auth import admin_required
 from collections import defaultdict
+from app.data_science import get_rfm_segmentation, forecast_sales
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -150,3 +151,28 @@ def analytics():
                            chart_data=chart_data,
                            top_product_labels=top_product_labels,
                            top_product_data=top_product_data)
+
+@admin.route('/data-science')
+@login_required
+@admin_required
+def data_science():
+    orders = Order.query.all()
+    users = User.query.all()
+    
+    # 1. Get RFM Segmentation
+    rfm_data = get_rfm_segmentation(orders, users)
+    
+    # 2. Get Sales Forecast
+    forecast_dates, forecast_values = forecast_sales(orders)
+    
+    # Prepare data for Chart.js
+    chart_labels = []
+    chart_data = []
+    if forecast_dates:
+        chart_labels = forecast_dates
+        chart_data = [round(val[0], 2) for val in forecast_values]
+
+    return render_template('admin/data_science.html', 
+                           rfm_data=rfm_data, 
+                           forecast_dates=chart_labels, 
+                           forecast_values=chart_data)

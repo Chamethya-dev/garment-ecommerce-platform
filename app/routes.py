@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
-from app.models import Product, Category, ProductVariant
+from app.models import Product, Category, ProductVariant, Order
 
 main = Blueprint('main', __name__)
 
@@ -55,3 +55,18 @@ def category_products(category_id):
     category = Category.query.get_or_404(category_id)
     products = Product.query.filter_by(category_id=category_id).all()
     return render_template('category.html', category=category, products=products)
+
+@main.route('/my-orders')
+@login_required
+def my_orders():
+    orders = Order.query.filter_by(user_id=current_user.user_id).order_by(Order.order_date.desc()).all()
+    return render_template('my_orders.html', orders=orders)
+
+@main.route('/order/<int:order_id>/track')
+@login_required
+def track_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    # Make sure user can only see their own orders
+    if order.user_id != current_user.user_id:
+        return "Unauthorized", 403
+    return render_template('track_order.html', order=order)

@@ -33,6 +33,9 @@
                     <li class="nav-item">
                         <span class="nav-link text-light">Hello, {{ current_user.name }}!</span>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.my_orders') }}">My Orders</a>
+                    </li>
                     {% if current_user.role == 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>

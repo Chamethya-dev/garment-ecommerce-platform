@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Inventory Management{% endblock %}
+{% block content %}
+<h2>Inventory Management</h2>
+
+<!-- Low Stock Alerts -->
+<div class="alert alert-danger mt-3">
+    <h4 class="alert-heading">⚠️ Low Stock Alerts ({{ low_stock|length }} items)</h4>
+    <p>The following variants have less than 10 units in stock:</p>
+    <table class="table table-sm mt-2">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th>SKU</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for variant in low_stock %}
+            <tr>
+                <td>{{ variant.product.name }}</td>
+                <td>{{ variant.color }} - {{ variant.size }}</td>
+                <td>{{ variant.sku }}</td>
+                <td class="text-danger fw-bold">{{ variant.stock_quantity }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center">No low stock items!</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- All Inventory -->
+<h4 class="mt-4">All Inventory</h4>
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Variant</th>
+            <th>SKU</th>
+            <th>Stock Quantity</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for variant in all_variants %}
+        <tr>
+            <td>{{ variant.product.name }}</td>
+            <td>{{ variant.color }} - {{ variant.size }}</td>
+            <td>{{ variant.sku }}</td>
+            <td>{{ variant.stock_quantity }}</td>
+            <td>
+                {% if variant.stock_quantity == 0 %}
+                    <span class="badge bg-danger">Out of Stock</span>
+                {% elif variant.stock_quantity < 10 %}
+                    <span class="badge bg-warning">Low Stock</span>
+                {% else %}
+                    <span class="badge bg-success">In Stock</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

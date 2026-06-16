@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.order_id }}{% endblock %}
+{% block content %}
+<h2>Order #{{ order.order_id }}</h2>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Order Information</div>
+            <div class="card-body">
+                <p><strong>Customer:</strong> {{ order.customer.name }}</p>
+                <p><strong>Email:</strong> {{ order.customer.email }}</p>
+                <p><strong>Phone:</strong> {{ order.customer.phone }}</p>
+                <p><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+                <p><strong>District:</strong> {{ order.shipping_district }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Order Status</div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.update_order_status', order_id=order.order_id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Update Status</label>
+                        <select name="status" class="form-select" required>
+                            <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h4>Order Items</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items %}
+            <tr>
+                <td>{{ item.variant.product.name }}</td>
+                <td>{{ item.variant.color }} - {{ item.variant.size }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>Rs. {{ item.unit_price }}</td>
+                <td>Rs. {{ item.quantity * item.unit_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
+                <td>Rs. {{ order.subtotal }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="text-end"><strong>Delivery Fee:</strong></td>
+                <td>Rs. {{ order.delivery_fee }}</td>
+            </tr>
+            <tr class="table-primary">
+                <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                <td><strong>Rs. {{ order.total_amount }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<a href="{{ url_for('admin.orders') }}" class="btn btn-secondary">← Back to Orders</a>
+{% endblock %}

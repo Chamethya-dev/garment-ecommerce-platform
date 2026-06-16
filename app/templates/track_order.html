@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Track Order #{{ order.order_id }}{% endblock %}
+{% block content %}
+<h2>Track Order #{{ order.order_id }}</h2>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h4>Order Status: 
+            <span class="badge {% if order.status == 'Pending' %}bg-warning
+                         {% elif order.status == 'Processing' %}bg-info
+                         {% elif order.status == 'Shipped' %}bg-primary
+                         {% elif order.status == 'Delivered' %}bg-success
+                         {% else %}bg-secondary{% endif %}">
+                {{ order.status }}
+            </span>
+        </h4>
+        
+        <div class="mt-4">
+            <h5>Order Timeline</h5>
+            <div class="progress" style="height: 30px;">
+                {% set status_progress = {
+                    'Pending': 25,
+                    'Processing': 50,
+                    'Shipped': 75,
+                    'Delivered': 100,
+                    'Cancelled': 0
+                } %}
+                <div class="progress-bar {% if order.status == 'Delivered' %}bg-success{% elif order.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}" 
+                     role="progressbar" style="width: {{ status_progress.get(order.status, 25) }}%">
+                    {{ status_progress.get(order.status, 25) }}%
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small>Pending</small>
+                <small>Processing</small>
+                <small>Shipped</small>
+                <small>Delivered</small>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <h5>Order Details</h5>
+            <p><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+            <p><strong>District:</strong> {{ order.shipping_district }}</p>
+            <p><strong>Total Amount:</strong> Rs. {{ order.total_amount }}</p>
+        </div>
+        
+        <h5 class="mt-4">Items</h5>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Variant</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td>{{ item.variant.product.name }}</td>
+                    <td>{{ item.variant.color }} - {{ item.variant.size }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>Rs. {{ item.unit_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{{ url_for('main.my_orders') }}" class="btn btn-secondary mt-3">← Back to My Orders</a>
+{% endblock %}

@@ -1,9 +1,12 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from functools import wraps
+from flask import Blueprint, render_template, request, flash, redirect, url_for, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
 
 auth = Blueprint('auth', __name__)
+
+# --- Authentication Routes ---
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -67,3 +70,13 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
+
+# --- Custom Decorators ---
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403) # Forbidden access
+        return f(*args, **kwargs)
+    return decorated_function

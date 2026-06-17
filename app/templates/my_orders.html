@@ -1,43 +1,208 @@
 {% extends "base.html" %}
-{% block title %}My Orders{% endblock %}
+{% block title %}My Orders - MANSA{% endblock %}
+
 {% block content %}
-<h2>My Orders</h2>
-{% if orders %}
-<table class="table table-striped mt-3">
-    <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for order in orders %}
-        <tr>
-            <td>#{{ order.order_id }}</td>
-            <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</td>
-            <td>Rs. {{ order.total_amount }}</td>
-            <td>
-                <span class="badge {% if order.status == 'Pending' %}bg-warning
-                             {% elif order.status == 'Processing' %}bg-info
-                             {% elif order.status == 'Shipped' %}bg-primary
-                             {% elif order.status == 'Delivered' %}bg-success
-                             {% else %}bg-secondary{% endif %}">
-                    {{ order.status }}
-                </span>
-            </td>
-            <td>
-                <a href="{{ url_for('main.track_order', order_id=order.order_id) }}" class="btn btn-sm btn-primary">Track Order</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<div class="alert alert-info mt-3">
-    <p class="mb-0">You haven't placed any orders yet. <a href="{{ url_for('main.shop') }}">Start shopping!</a></p>
+<style>
+    .orders-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+    
+    /* Header Section */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #000;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+    .page-subtitle {
+        color: #666;
+        font-size: 1rem;
+    }
+
+    /* Table Structure */
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+    }
+    
+    .orders-table thead {
+        background-color: #f8f9fa;
+    }
+    
+    .orders-table th {
+        padding: 1.2rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #333;
+        border-bottom: 1px solid #eaeaea;
+    }
+    
+    .orders-table td {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+    
+    .orders-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .orders-table tbody tr:hover {
+        background-color: #fafafa;
+    }
+
+    /* Value Styling */
+    .order-id {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #000;
+    }
+    
+    .order-date {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.2rem;
+    }
+    .order-time {
+        font-size: 0.8rem;
+        color: #888;
+    }
+    
+    .order-total {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #000;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-pending { background: #fff8e1; color: #f57c00; }
+    .status-processing { background: #e3f2fd; color: #1976d2; }
+    .status-shipped { background: #f3e5f5; color: #7b1fa2; }
+    .status-delivered { background: #e8f5e9; color: #388e3c; }
+    .status-cancelled { background: #ffebee; color: #d32f2f; }
+
+    /* Action Button */
+    .btn-track {
+        background: #000;
+        color: #fff;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-track:hover {
+        background: #333;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: #fff;
+        border: 1px solid #eaeaea;
+        border-radius: 8px;
+    }
+    .empty-icon { font-size: 4rem; color: #ddd; margin-bottom: 1.5rem; }
+    .empty-title { font-size: 1.5rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
+    .empty-text { color: #888; margin-bottom: 2rem; }
+    .btn-shop {
+        background: #000; color: #fff; padding: 1rem 2.5rem;
+        font-size: 0.8rem; font-weight: 600; letter-spacing: 1.5px;
+        text-transform: uppercase; text-decoration: none; border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    .btn-shop:hover { background: #333; color: #fff; transform: translateY(-2px); }
+</style>
+
+<div class="orders-wrapper">
+    <div class="page-header">
+        <h1 class="page-title">My Orders</h1>
+        <p class="page-subtitle">Track and manage your purchases</p>
+    </div>
+
+    {% if orders %}
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date & Time</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>
+                    <span class="order-id">#{{ order.order_id }}</span>
+                </td>
+                <td>
+                    <div class="order-date">{{ order.order_date.strftime('%B %d, %Y') }}</div>
+                    <div class="order-time">{{ order.order_date.strftime('%I:%M %p') }}</div>
+                </td>
+                <td>
+                    <span class="order-total">Rs. {{ "%.2f"|format(order.total_amount) }}</span>
+                </td>
+                <td>
+                    <span class="status-badge 
+                        {% if order.status == 'Pending' %}status-pending
+                        {% elif order.status == 'Processing' %}status-processing
+                        {% elif order.status == 'Shipped' %}status-shipped
+                        {% elif order.status == 'Delivered' %}status-delivered
+                        {% else %}status-cancelled{% endif %}">
+                        {{ order.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('main.track_order', order_id=order.order_id) }}" class="btn-track">
+                        Track Order
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-bag"></i></div>
+        <h3 class="empty-title">You haven't placed any orders yet</h3>
+        <p class="empty-text">Start shopping to see your orders here</p>
+        <a href="{{ url_for('main.shop') }}" class="btn-shop">Start Shopping</a>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

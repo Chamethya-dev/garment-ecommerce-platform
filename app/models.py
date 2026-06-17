@@ -73,6 +73,7 @@ class ProductImage(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)
     image_url = db.Column(db.String(255), nullable=False)
     is_primary = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
 
 # --- SHIPPING ZONE MODEL ---
 class ShippingZone(db.Model):
@@ -96,6 +97,21 @@ class Order(db.Model):
     shipping_address = db.Column(db.Text, nullable=False)
 
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+
+# --- WISHLIST MODEL ---
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
+    wishlist_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.product_id'), nullable=False)
+    added_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='wishlist_items')
+    product = db.relationship('Product', backref='wishlisted_by')
+    
+    # Prevent duplicate wishlist entries
+    __table_args__ = (db.UniqueConstraint('user_id', 'product_id', name='unique_wishlist_item'),)
 
 # --- ORDER ITEM MODEL ---
 class OrderItem(db.Model):

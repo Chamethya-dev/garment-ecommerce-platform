@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
@@ -22,13 +22,8 @@ def dashboard():
     total_orders = Order.query.count()
     low_stock_variants = ProductVariant.query.filter(ProductVariant.stock_quantity < 10).count()
     recent_orders = Order.query.order_by(Order.order_date.desc()).limit(10).all()
-    
-    return render_template('admin/dashboard.html', 
-                           total_products=total_products, 
-                           total_categories=total_categories, 
-                           low_stock_variants=low_stock_variants,
-                           total_orders=total_orders,
-                           recent_orders=recent_orders)
+    return render_template('admin/dashboard.html', total_products=total_products, total_categories=total_categories, 
+                           low_stock_variants=low_stock_variants, total_orders=total_orders, recent_orders=recent_orders)
 
 @admin.route('/products')
 @login_required
@@ -38,33 +33,136 @@ def products():
     return render_template('admin/products.html', products=products)
 
 @admin.route('/product/add', methods=['GET', 'POST'])
+@admin.route('/product/edit/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
-def add_product():
+def add_product(product_id=None):
     categories = Category.query.all()
+    product = None
+    if product_id:
+        product = Product.query.get_or_404(product_id)
+    
     if request.method == 'POST':
         name = request.form.get('name')
         category_id = request.form.get('category_id')
         description = request.form.get('description')
         regular_price = request.form.get('regular_price')
         sale_price = request.form.get('sale_price') or None
+        product_color = request.form.get('product_color') # NEW: Single color for the whole product
         
-        new_product = Product(name=name, category_id=category_id, description=description, regular_price=regular_price, sale_price=sale_price)
-        db.session.add(new_product)
+        if product:
+            product.name = name
+            product.category_id = category_id
+            product.description = description
+            product.regular_price = regular_price
+            product.sale_price = sale_price
+            flash('Product updated successfully!', 'success')
+        else:
+            product = Product(name=name, category_id=category_id, description=description, 
+                              regular_price=regular_price, sale_price=sale_price)
+            db.session.add(product)
+            db.session.flush()
+            flash('Product added successfully!', 'success')
+            
         db.session.commit()
 
-        file = request.files.get('image')
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            img = ProductImage(product_id=new_product.product_id, image_url=filename, is_primary=True)
-            db.session.add(img)
+        # --- HANDLE VARIANTS (Sizes & Stock Only) ---
+        variant_ids = request.form.getlist('variant_ids')
+        sizes = request.form.getlist('sizes')
+        stocks = request.form.getlist('stocks')
+        
+        processed_variant_ids = []
+        
+        for i in range(len(sizes)):
+            size = sizes[i]
+            stock = int(stocks[i]) if stocks[i] else 0
+            vid = variant_ids[i] if i < len(variant_ids) else None
+            
+            sku = f"{product.product_id}-{size}-{product_color}".upper().replace(" ", "")
+            
+            if vid:
+                variant = ProductVariant.query.get(vid)
+                if variant and variant.product_id == product.product_id:
+                    variant.size = size
+                    variant.color = product_color # Apply the single product color
+                    variant.stock_quantity = stock
+                    variant.sku = sku
+                    processed_variant_ids.append(variant.variant_id)
+            else:
+                if not ProductVariant.query.filter_by(sku=sku).first():
+                    new_variant = ProductVariant(
+                        product_id=product.product_id, sku=sku, 
+                        size=size, color=product_color, stock_quantity=stock
+                    )
+                    db.session.add(new_variant)
+                    db.session.flush()
+                    processed_variant_ids.append(new_variant.variant_id)
+                    
+        if product:
+            for v in product.variants:
+                if v.variant_id not in processed_variant_ids:
+                    db.session.delete(v)
+        db.session.commit()
+
+        # --- HANDLE IMAGES ---
+        files = request.files.getlist('images')
+        if files:
+            for index, file in enumerate(files):
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    existing = ProductImage.query.filter_by(product_id=product.product_id, image_url=filename).first()
+                    if not existing:
+                        is_primary = (index == 0) if not product.images else False
+                        img = ProductImage(product_id=product.product_id, image_url=filename, is_primary=is_primary)
+                        db.session.add(img)
             db.session.commit()
 
-        flash('Product added successfully!', 'success')
+        remove_ids = request.form.getlist('remove_images')
+        if remove_ids:
+            for img_id in remove_ids:
+                img = ProductImage.query.get(img_id)
+                if img:
+                    try: os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], img.image_url))
+                    except: pass
+                    db.session.delete(img)
+            db.session.commit()
+
         return redirect(url_for('admin.products'))
-    return render_template('admin/add_product.html', categories=categories)
+        
+    return render_template('admin/add_product.html', categories=categories, product=product)
+
+@admin.route('/product/delete/<int:product_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    has_orders = any(item for v in product.variants for item in v.order_items)
+    if has_orders:
+        flash('Cannot delete: Product has existing orders. Set stock to 0 instead.', 'danger')
+    else:
+        for img in product.images:
+            try: os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], img.image_url))
+            except: pass
+        db.session.delete(product)
+        db.session.commit()
+        flash('Product deleted successfully.', 'success')
+    return redirect(url_for('admin.products'))
+
+@admin.route('/product/image/reorder', methods=['POST'])
+@login_required
+@admin_required
+def reorder_images():
+    data = request.json
+    image_ids = data.get('image_ids', [])
+    for index, image_id in enumerate(image_ids):
+        img = ProductImage.query.get(image_id)
+        if img:
+            img.display_order = index
+            img.is_primary = (index == 0)
+    db.session.commit()
+    return jsonify({'status': 'success'})
 
 @admin.route('/category/add', methods=['POST'])
 @login_required
@@ -97,82 +195,40 @@ def order_detail(order_id):
 @admin_required
 def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
-    new_status = request.form.get('status')
-    order.status = new_status
+    order.status = request.form.get('status')
     db.session.commit()
-    flash(f'Order #{order_id} status updated to {new_status}', 'success')
+    flash(f'Order #{order_id} status updated', 'success')
     return redirect(url_for('admin.order_detail', order_id=order_id))
 
 @admin.route('/inventory')
 @login_required
 @admin_required
 def inventory():
-    low_stock = ProductVariant.query.filter(ProductVariant.stock_quantity < 10).all()
-    all_variants = ProductVariant.query.all()
-    return render_template('admin/inventory.html', low_stock=low_stock, all_variants=all_variants)
+    return render_template('admin/inventory.html', low_stock=ProductVariant.query.filter(ProductVariant.stock_quantity < 10).all(), all_variants=ProductVariant.query.all())
 
-# --- NEW: ANALYTICS ROUTE ---
 @admin.route('/analytics')
 @login_required
 @admin_required
 def analytics():
-    # Get all orders (you can filter by status='Delivered' if you only want completed sales)
     orders = Order.query.all()
-    
-    total_revenue = sum(float(order.total_amount) for order in orders)
-    total_orders = len(orders)
-    
-    # Calculate Revenue over time (grouped by date)
+    total_revenue = sum(float(o.total_amount) for o in orders)
     revenue_by_date = defaultdict(float)
-    for order in orders:
-        date_str = order.order_date.strftime('%Y-%m-%d')
-        revenue_by_date[date_str] += float(order.total_amount)
-        
-    # Sort by date
+    for o in orders: revenue_by_date[o.order_date.strftime('%Y-%m-%d')] += float(o.total_amount)
     sorted_dates = sorted(revenue_by_date.keys())
-    chart_labels = sorted_dates
-    chart_data = [revenue_by_date[date] for date in sorted_dates]
-
-    # Calculate Top Selling Products
     product_sales = defaultdict(int)
-    for order in orders:
-        for item in order.items:
-            product_sales[item.variant.product.name] += item.quantity
-            
-    # Sort and get top 5
-    sorted_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:5]
-    top_product_labels = [p[0] for p in sorted_products]
-    top_product_data = [p[1] for p in sorted_products]
-
-    return render_template('admin/analytics.html', 
-                           total_revenue=total_revenue, 
-                           total_orders=total_orders,
-                           chart_labels=chart_labels,
-                           chart_data=chart_data,
-                           top_product_labels=top_product_labels,
-                           top_product_data=top_product_data)
+    for o in orders:
+        for item in o.items: product_sales[item.variant.product.name] += item.quantity
+    top_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:5]
+    return render_template('admin/analytics.html', total_revenue=total_revenue, total_orders=len(orders),
+                           chart_labels=sorted_dates, chart_data=[revenue_by_date[d] for d in sorted_dates],
+                           top_product_labels=[p[0] for p in top_products], top_product_data=[p[1] for p in top_products])
 
 @admin.route('/data-science')
 @login_required
 @admin_required
 def data_science():
-    orders = Order.query.all()
-    users = User.query.all()
-    
-    # 1. Get RFM Segmentation
-    rfm_data = get_rfm_segmentation(orders, users)
-    
-    # 2. Get Sales Forecast
-    forecast_dates, forecast_values = forecast_sales(orders)
-    
-    # Prepare data for Chart.js
-    chart_labels = []
-    chart_data = []
-    if forecast_dates:
-        chart_labels = forecast_dates
-        chart_data = [round(val[0], 2) for val in forecast_values]
-
-    return render_template('admin/data_science.html', 
-                           rfm_data=rfm_data, 
-                           forecast_dates=chart_labels, 
-                           forecast_values=chart_data)
+    rfm_data = get_rfm_segmentation(Order.query.all(), User.query.all())
+    forecast_dates, forecast_values = forecast_sales(Order.query.all())
+    return render_template('admin/data_science.html', rfm_data=rfm_data, 
+                           forecast_dates=forecast_dates or [], 
+                           forecast_values=[round(v[0], 2) for v in forecast_values] if forecast_values else [])

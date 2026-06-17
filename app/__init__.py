@@ -37,6 +37,9 @@ def create_app(config_class=Config):
     from app.cart import cart 
     app.register_blueprint(cart)
 
+    from app.wishlist import wishlist
+    app.register_blueprint(wishlist)
+
     return app
 
 from app import models

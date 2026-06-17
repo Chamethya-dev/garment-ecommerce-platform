@@ -1,53 +1,366 @@
 {% extends "base.html" %}
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} - MANSA{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6">
-        {% if product.images %}
-            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="img-fluid rounded" alt="{{ product.name }}">
-        {% else %}
-            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 400px;"><h3>No Image</h3></div>
-        {% endif %}
-    </div>
-    <div class="col-md-6">
-        <h1>{{ product.name }}</h1>
-        <p class="text-muted">Category: {{ product.category.name }}</p>
-        
-        <div class="mb-3">
-            {% if product.sale_price %}
-                <h3 class="text-danger">Rs. {{ product.sale_price }}</h3>
-                <p class="text-decoration-line-through text-muted">Rs. {{ product.regular_price }}</p>
-            {% else %}
-                <h3>Rs. {{ product.regular_price }}</h3>
-            {% endif %}
+<style>
+    .main-image-container { position: relative; background: #f8f9fa; border-radius: 8px; overflow: hidden; }
+    .main-image { width: 100%; height: 600px; object-fit: contain; }
+    .thumbnail-list { display: flex; flex-direction: column; gap: 10px; }
+    .thumbnail { width: 80px; height: 100px; object-fit: cover; cursor: pointer; border: 2px solid transparent; border-radius: 4px; transition: 0.2s; }
+    .thumbnail:hover, .thumbnail.active { border-color: #000; }
+    
+    .product-title { font-size: 2rem; font-weight: 400; margin-bottom: 0.5rem; }
+    .sku-text { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .price-text { font-size: 1.5rem; font-weight: 500; margin-bottom: 1.5rem; }
+    
+    /* Color Display */
+    .color-display-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 3px solid #000;
+    }
+    .color-circle-display {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #ddd;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .color-text-display {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #000;
+    }
+    
+    .variant-selected-box {
+        background: #f8f9fa;
+        border-left: 3px solid #000;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 4px;
+    }
+    .variant-detail { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+    .variant-detail:last-child { margin-bottom: 0; }
+    .variant-label { font-size: 0.8rem; color: #666; font-weight: 600; text-transform: uppercase; }
+    .variant-value { font-size: 0.9rem; font-weight: 700; color: #000; }
+    
+    .stock-alert { color: #d9534f; font-weight: 500; font-size: 0.9rem; margin-bottom: 5px; }
+    .stock-info { font-size: 0.85rem; color: #666; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .stock-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+    .stock-in { background: #28a745; }
+    .stock-low { background: #ffc107; }
+    .stock-out { background: #dc3545; }
+    .progress { height: 6px; background-color: #e9ecef; margin-bottom: 2rem; border-radius: 3px; }
+    .progress-bar { background-color: #333; }
+
+    .size-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; }
+    .size-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 2rem; }
+    .size-box { 
+        width: 60px; height: 50px; display: flex; align-items: center; justify-content: center; 
+        border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 0.9rem; transition: 0.2s; position: relative;
+    }
+    .size-box:hover:not(.disabled) { border-color: #000; }
+    .size-box.active { background: #000; color: #fff; border-color: #000; }
+    .size-box.disabled { opacity: 0.4; cursor: not-allowed; background: #f8f9fa; text-decoration: line-through; }
+    .size-box.disabled::after {
+        content: "Out of Stock"; position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+        font-size: 0.6rem; white-space: nowrap; color: #dc3545; font-weight: 600;
+    }
+
+    .qty-stepper { display: flex; border: 1px solid #ddd; width: 120px; height: 50px; }
+    .qty-btn { width: 40px; background: #fff; border: none; font-size: 1.2rem; cursor: pointer; }
+    .qty-btn:hover:not(:disabled) { background: #f8f9fa; }
+    .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .qty-input { width: 40px; border: none; border-left: 1px solid #ddd; border-right: 1px solid #ddd; text-align: center; font-size: 1rem; }
+    .qty-input:focus { outline: none; }
+
+    .btn-add-cart { background: #000; color: #fff; height: 50px; font-weight: 600; letter-spacing: 1px; flex-grow: 1; border: none; transition: all 0.3s; }
+    .btn-add-cart:hover:not(:disabled) { background: #333; color: #fff; }
+    .btn-add-cart:disabled { background: #ccc; cursor: not-allowed; }
+    .badge-out-of-stock { background: #dc3545; }
+
+    .desc-text { line-height: 1.6; color: #555; }
+    .size-chart-table th, .size-chart-table td { padding: 12px; text-align: center; border: 1px solid #eee; }
+    .size-chart-table th { background: #f8f9fa; font-weight: 600; }
+</style>
+
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-md-6">
+            <div class="d-flex gap-3">
+                <div class="thumbnail-list d-none d-md-flex">
+                    {% if product.images %}
+                        {% for img in product.images %}
+                            <img src="{{ url_for('static', filename='uploads/' + img.image_url) }}" class="thumbnail {% if loop.first %}active{% endif %}" onclick="changeImage(this, '{{ url_for('static', filename='uploads/' + img.image_url) }}')">
+                        {% endfor %}
+                    {% else %}
+                        <div class="thumbnail bg-light d-flex align-items-center justify-content-center"><i class="bi bi-image"></i></div>
+                    {% endif %}
+                </div>
+                <div class="main-image-container flex-grow-1">
+                    {% if product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="main-image" id="mainProductImage" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="main-image d-flex align-items-center justify-content-center text-muted bg-light"><i class="bi bi-image display-1"></i></div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        
-        <p>{{ product.description or 'No description available.' }}</p>
-        
-        {% if variants %}
-        <form action="{{ url_for('cart.add_to_cart') }}" method="POST">
-            <div class="mb-3">
-                <label class="form-label fw-bold">Select Size & Color</label>
-                <select name="variant_id" class="form-select" required>
-                    {% for variant in variants %}
-                        {% if variant.stock_quantity > 0 %}
-                            <option value="{{ variant.variant_id }}">{{ variant.color }} - {{ variant.size }} (Stock: {{ variant.stock_quantity }})</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+
+        <div class="col-md-6">
+            <div id="stockStatusBadge">
+                <span class="badge bg-success mb-2">In Stock</span>
             </div>
             
-            <div class="mb-4">
-                <label class="form-label fw-bold">Quantity</label>
-                <input type="number" name="quantity" class="form-control" value="1" min="1" max="10" required style="width: 100px;">
-            </div>
+            <h1 class="product-title">{{ product.name }}</h1>
+            <p class="sku-text">SKU: {{ product.name[:3].upper() }}{{ product.product_id }}-001</p>
             
-            <button type="submit" class="btn btn-primary btn-lg w-100">Add to Cart</button>
-        </form>
-        {% else %}
-        <div class="alert alert-warning">Out of Stock</div>
-        {% endif %}
+            <div class="price-text">
+                {% if product.sale_price %}
+                    <span class="text-danger">Rs. {{ product.sale_price }}</span>
+                    <span class="text-decoration-line-through text-muted ms-2 fs-6">Rs. {{ product.regular_price }}</span>
+                {% else %}
+                    Rs. {{ product.regular_price }}
+                {% endif %}
+            </div>
+
+            <!-- Static Color Display -->
+            {% set product_color = product.variants[0].color if product.variants else 'Unknown' %}
+            <div class="color-display-container">
+                <div class="color-circle-display" id="mainColorCircle" style="background-color: #ccc;"></div>
+                <div class="color-text-display" id="mainColorText">{{ product_color }}</div>
+            </div>
+
+            <div class="variant-selected-box">
+                <div class="variant-detail">
+                    <span class="variant-label">Selected Size</span>
+                    <span class="variant-value" id="selectedSizeDisplay">-</span>
+                </div>
+                <div class="variant-detail">
+                    <span class="variant-label">Available Stock</span>
+                    <span class="variant-value" id="selectedStockDisplay">-</span>
+                </div>
+            </div>
+
+            <div id="stockAlertContainer">
+                <div class="stock-info">
+                    <span class="stock-indicator stock-in"></span>
+                    <span>Please select a size</span>
+                </div>
+            </div>
+
+            <span class="size-label">Select Size</span>
+            <div class="size-selector" id="sizeSelector"></div>
+
+            <form action="{{ url_for('cart.add_to_cart') }}" method="POST" id="addToCartForm" style="display: none;">
+                <input type="hidden" name="variant_id" id="selectedVariantId" value="">
+                <input type="hidden" name="quantity" id="quantityInput" value="1">
+                <input type="hidden" id="maxStock" value="0">
+                <div class="d-flex gap-3 mb-4">
+                    <div class="qty-stepper">
+                        <button type="button" class="qty-btn" onclick="updateQty(-1)" id="qtyMinus" disabled>-</button>
+                        <input type="text" class="qty-input" value="1" id="qtyDisplay" readonly>
+                        <button type="button" class="qty-btn" onclick="updateQty(1)" id="qtyPlus" disabled>+</button>
+                    </div>
+                    <button type="submit" class="btn-add-cart" id="addToCartBtn" disabled>ADD TO CART</button>
+                </div>
+            </form>
+
+            <div id="outOfStockMessage" style="display: none;">
+                <div class="alert alert-danger mb-4">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <strong>Sold Out</strong> - This size is currently unavailable.
+                </div>
+            </div>
+
+            <form action="{{ url_for('wishlist.add_to_wishlist', product_id=product.product_id) if not in_wishlist else url_for('wishlist.remove_from_wishlist', product_id=product.product_id) }}" method="POST" class="mb-4">
+                <button type="submit" class="btn btn-outline-dark w-100 py-2">
+                    <i class="bi {% if in_wishlist %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} me-2"></i>
+                    {% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+                </button>
+            </form>
+            <p class="small text-muted"><i class="bi bi-shield-check me-2"></i>Guaranteed Safe Checkout</p>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-5 border-top">
+        <div class="col-md-6">
+            <h4 class="fw-bold mb-3">Product Description</h4>
+            <p class="desc-text">{{ product.description or 'No description available.' }}</p>
+            <ul class="mt-4 text-muted small">
+                <li><strong>Material:</strong> Premium Cotton Blend</li>
+                <li><strong>Fit:</strong> Regular Fit</li>
+                <li><strong>Closure:</strong> Zipper closure</li>
+                <li><strong>Wash & Care:</strong> Machine wash cold</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h4 class="fw-bold mb-3">Size Chart</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered size-chart-table small">
+                    <thead>
+                        <tr><th>Measurement</th><th>XS</th><th>S</th><th>M</th><th>L</th><th>XL</th><th>XXL</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in size_chart %}
+                        <tr>
+                            <td class="text-start fw-bold">{{ row.measurement }}</td>
+                            <td>{{ row.XS }}</td><td>{{ row.S }}</td><td>{{ row.M }}</td>
+                            <td>{{ row.L }}</td><td>{{ row.XL }}</td><td>{{ row.XXL }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-muted mt-2">All measurements are in inches. Slight variations may occur.</p>
+        </div>
     </div>
 </div>
+
+<script>
+    // Map complex color names to Hex codes so they show up in the circle
+    const colorHexMap = {
+        'red': '#ff0000', 'blue': '#0000ff', 'black': '#000000', 'white': '#ffffff',
+        'navy': '#000080', 'navy blue': '#000080', 'coral pink': '#ff7f50', 'pink': '#ffc0cb',
+        'green': '#008000', 'yellow': '#ffff00', 'grey': '#808080', 'gray': '#808080',
+        'brown': '#a52a2a', 'beige': '#f5f5dc', 'purple': '#800080', 'orange': '#ffa500',
+        'coral': '#ff7f50', 'teal': '#008080', 'maroon': '#800000', 'olive': '#808000'
+    };
+
+    function getColorHex(colorName) {
+        if (!colorName) return '#cccccc';
+        const lowerName = colorName.toLowerCase().trim();
+        return colorHexMap[lowerName] || '#cccccc'; // Fallback to grey if not found
+    }
+
+    // Initialize Color Circle on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorName = "{{ product_color }}";
+        const circle = document.getElementById('mainColorCircle');
+        if (circle && colorName) {
+            circle.style.backgroundColor = getColorHex(colorName);
+        }
+    });
+
+    const variantsData = [
+        {% for variant in variants %}
+        { variant_id: '{{ variant.variant_id }}', size: '{{ variant.size }}', stock: {{ variant.stock_quantity }} }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    let selectedSize = null;
+    let currentStock = 0;
+
+    function changeImage(thumbnail, src) {
+        document.getElementById('mainProductImage').src = src;
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        thumbnail.classList.add('active');
+    }
+
+    function updateSizes() {
+        const sizeSelector = document.getElementById('sizeSelector');
+        sizeSelector.innerHTML = '';
+        const sizes = [...new Set(variantsData.map(v => v.size))];
+        sizes.sort((a, b) => {
+            const order = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+            return order.indexOf(a) - order.indexOf(b);
+        });
+        
+        sizes.forEach(size => {
+            const variant = variantsData.find(v => v.size === size);
+            const stock = variant ? variant.stock : 0;
+            const isOutOfStock = stock === 0;
+            const sizeBox = document.createElement('div');
+            sizeBox.className = `size-box ${isOutOfStock ? 'disabled' : ''}`;
+            sizeBox.textContent = size;
+            sizeBox.onclick = () => { if (!isOutOfStock) selectSize(size, variant.variant_id, stock); };
+            sizeSelector.appendChild(sizeBox);
+        });
+        document.getElementById('addToCartForm').style.display = 'none';
+        document.getElementById('outOfStockMessage').style.display = 'none';
+        updateVariantInfo();
+    }
+    
+    function selectSize(size, variantId, stock) {
+        selectedSize = size;
+        currentStock = stock;
+        document.querySelectorAll('.size-box').forEach(box => {
+            box.classList.remove('active');
+            if (box.textContent === size) box.classList.add('active');
+        });
+        document.getElementById('selectedVariantId').value = variantId;
+        document.getElementById('maxStock').value = stock;
+        document.getElementById('quantityInput').value = '1';
+        document.getElementById('qtyDisplay').value = '1';
+        
+        if (stock > 0) {
+            document.getElementById('addToCartForm').style.display = 'block';
+            document.getElementById('outOfStockMessage').style.display = 'none';
+            updateButtonStates();
+        } else {
+            document.getElementById('addToCartForm').style.display = 'none';
+            document.getElementById('outOfStockMessage').style.display = 'block';
+        }
+        updateVariantInfo();
+    }
+    
+    function updateVariantInfo() {
+        const sizeDisplay = document.getElementById('selectedSizeDisplay');
+        const stockDisplay = document.getElementById('selectedStockDisplay');
+        const stockAlertContainer = document.getElementById('stockAlertContainer');
+        const stockStatusBadge = document.getElementById('stockStatusBadge');
+        
+        if (selectedSize) {
+            sizeDisplay.textContent = selectedSize;
+            stockDisplay.textContent = currentStock + ' unit' + (currentStock !== 1 ? 's' : '');
+            if (currentStock === 0) {
+                stockAlertContainer.innerHTML = `<div class="stock-info"><span class="stock-indicator stock-out"></span><span class="fw-bold text-danger">Out of Stock</span></div>`;
+                stockStatusBadge.innerHTML = '<span class="badge badge-out-of-stock mb-2">Out of Stock</span>';
+            } else if (currentStock < 10) {
+                stockAlertContainer.innerHTML = `<div class="stock-alert"><i class="bi bi-exclamation-triangle-fill me-2"></i>Hurry! Only ${currentStock} Left in Stock!</div><div class="progress"><div class="progress-bar" role="progressbar" style="width: ${Math.min((currentStock / 20) * 100, 100)}%"></div></div>`;
+                stockStatusBadge.innerHTML = '<span class="badge bg-success mb-2">In Stock</span>';
+            } else {
+                stockAlertContainer.innerHTML = `<div class="stock-info"><span class="stock-indicator stock-in"></span><span>${currentStock} units available</span></div>`;
+                stockStatusBadge.innerHTML = '<span class="badge bg-success mb-2">In Stock</span>';
+            }
+        } else {
+            sizeDisplay.textContent = '-';
+            stockDisplay.textContent = '-';
+            stockAlertContainer.innerHTML = `<div class="stock-info"><span class="stock-indicator stock-low"></span><span>Please select a size</span></div>`;
+        }
+    }
+
+    function updateQty(change) {
+        let currentQty = parseInt(document.getElementById('qtyDisplay').value);
+        let maxStock = parseInt(document.getElementById('maxStock').value);
+        let newQty = currentQty + change;
+        if (newQty >= 1 && newQty <= maxStock) {
+            document.getElementById('qtyDisplay').value = newQty;
+            document.getElementById('quantityInput').value = newQty;
+            updateButtonStates();
+        } else if (newQty > maxStock) {
+            alert('Sorry, we only have ' + maxStock + ' unit(s) in stock.');
+            document.getElementById('qtyDisplay').value = maxStock;
+            document.getElementById('quantityInput').value = maxStock;
+            updateButtonStates();
+        }
+    }
+    
+    function updateButtonStates() {
+        let currentQty = parseInt(document.getElementById('qtyDisplay').value);
+        let maxStock = parseInt(document.getElementById('maxStock').value);
+        document.getElementById('qtyMinus').disabled = (currentQty <= 1);
+        document.getElementById('qtyPlus').disabled = (currentQty >= maxStock);
+        document.getElementById('addToCartBtn').disabled = (currentStock <= 0);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateSizes();
+    });
+</script>
 {% endblock %}

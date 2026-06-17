@@ -18,11 +18,19 @@ def view_cart():
             price = Decimal(variant.product.sale_price or variant.product.regular_price)
             subtotal = price * qty
             total += subtotal
+            
+            # Check if stock is sufficient
+            stock_status = 'in_stock'
+            if variant.stock_quantity < qty:
+                stock_status = 'low_stock' if variant.stock_quantity > 0 else 'out_of_stock'
+            
             items.append({
                 'variant': variant,
                 'quantity': qty,
                 'price': price,
-                'subtotal': subtotal
+                'subtotal': subtotal,
+                'stock_available': variant.stock_quantity,
+                'stock_status': stock_status
             })
             
     return render_template('cart.html', items=items, total=total)
@@ -32,14 +40,38 @@ def add_to_cart():
     variant_id = str(request.form.get('variant_id'))
     quantity = int(request.form.get('quantity', 1))
     
+    # Check if variant exists
+    variant = ProductVariant.query.get(variant_id)
+    if not variant:
+        flash('Product variant not found!', 'danger')
+        return redirect(url_for('main.shop'))
+    
+    # Check stock availability
+    if variant.stock_quantity < quantity:
+        flash(f'Sorry, we only have {variant.stock_quantity} unit(s) in stock for {variant.product.name}.', 'warning')
+        return redirect(url_for('main.product_detail', product_id=variant.product_id))
+    
+    # Check if already in cart
     user_cart = session.get('cart', {})
+    current_qty_in_cart = user_cart.get(variant_id, 0)
+    
+    # Check if adding more would exceed stock
+    if current_qty_in_cart + quantity > variant.stock_quantity:
+        available = variant.stock_quantity - current_qty_in_cart
+        if available <= 0:
+            flash(f'Sorry, {variant.product.name} is already at maximum quantity in your cart.', 'warning')
+        else:
+            flash(f'Only {available} more unit(s) can be added. Stock limit reached.', 'warning')
+        return redirect(url_for('main.product_detail', product_id=variant.product_id))
+    
+    # Add to cart
     if variant_id in user_cart:
         user_cart[variant_id] += quantity
     else:
         user_cart[variant_id] = quantity
-    session['cart'] = user_cart
     
-    flash('Item added to cart!', 'success')
+    session['cart'] = user_cart
+    flash(f'{variant.product.name} added to cart!', 'success')
     return redirect(url_for('cart.view_cart'))
 
 @cart.route('/cart/update', methods=['POST'])
@@ -47,12 +79,26 @@ def update_cart():
     variant_id = str(request.form.get('variant_id'))
     quantity = int(request.form.get('quantity'))
     
-    user_cart = session.get('cart', {})
-    if quantity > 0:
-        user_cart[variant_id] = quantity
-    else:
+    variant = ProductVariant.query.get(variant_id)
+    
+    if quantity <= 0:
+        # Remove from cart
+        user_cart = session.get('cart', {})
         user_cart.pop(variant_id, None)
-    session['cart'] = user_cart
+        session['cart'] = user_cart
+        flash('Item removed from cart.', 'info')
+    elif variant:
+        # Check stock limit
+        if quantity > variant.stock_quantity:
+            flash(f'Sorry, we only have {variant.stock_quantity} unit(s) in stock for {variant.product.name}.', 'warning')
+            quantity = variant.stock_quantity  # Adjust to max available
+        
+        user_cart = session.get('cart', {})
+        user_cart[variant_id] = quantity
+        session['cart'] = user_cart
+        flash('Cart updated!', 'success')
+    else:
+        flash('Product variant not found!', 'danger')
     
     return redirect(url_for('cart.view_cart'))
 
@@ -71,6 +117,13 @@ def checkout():
     if not cart_items:
         flash('Your cart is empty!', 'warning')
         return redirect(url_for('main.shop'))
+    
+    # Validate stock before checkout
+    for variant_id, qty in cart_items.items():
+        variant = ProductVariant.query.get(variant_id)
+        if not variant or variant.stock_quantity < qty:
+            flash(f'Stock updated for {variant.product.name if variant else "an item"}. Please review your cart.', 'warning')
+            return redirect(url_for('cart.view_cart'))
         
     total = Decimal(0)
     for variant_id, qty in cart_items.items():
@@ -97,12 +150,15 @@ def place_order():
     subtotal = Decimal(0)
     order_items_data = []
     
+    # Final stock validation before placing order
     for variant_id, qty in cart_items.items():
         variant = ProductVariant.query.get(variant_id)
         if not variant:
-            continue
+            flash(f'Product variant not found!', 'danger')
+            return redirect(url_for('cart.view_cart'))
+            
         if variant.stock_quantity < qty:
-            flash(f'Not enough stock for {variant.product.name}.', 'danger')
+            flash(f'Sorry, {variant.product.name} is now out of stock or has limited availability. Please update your cart.', 'danger')
             return redirect(url_for('cart.view_cart'))
             
         price = Decimal(variant.product.sale_price or variant.product.regular_price)
@@ -130,6 +186,7 @@ def place_order():
             unit_price=item['price']
         )
         db.session.add(order_item)
+        # Deduct stock
         item['variant'].stock_quantity -= item['qty']
         
     db.session.commit()

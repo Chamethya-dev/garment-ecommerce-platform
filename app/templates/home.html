@@ -1,46 +1,354 @@
 {% extends "base.html" %}
-{% block title %}Home - Garment Store{% endblock %}
+{% block title %}MANSA - Timeless Elegance{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="p-5 mb-4 bg-light rounded-3 text-center">
-    <h1 class="display-4 fw-bold">Welcome to Garment Store</h1>
-    <p class="col-md-8 fs-5 mx-auto">Discover the latest fashion trends with our premium collection of garments.</p>
-    <a href="{{ url_for('main.shop') }}" class="btn btn-primary btn-lg mt-3">Shop Now</a>
-</div>
+<style>
+    /* Hero Section with Background Image */
+    .hero-banner {
+        position: relative;
+        height: 90vh;
+        background: linear-gradient(135deg, rgba(240,240,240,0.9) 0%, rgba(230,230,230,0.8) 100%),
+                    url('https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920') center/cover;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+    }
+    
+    .hero-content {
+        z-index: 2;
+        max-width: 800px;
+        padding: 2rem;
+    }
+    
+    .hero-title {
+        font-size: 5rem;
+        font-weight: 300;
+        letter-spacing: 15px;
+        margin-bottom: 3rem;
+        color: #000;
+        text-transform: uppercase;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 3rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+    }
+    
+    /* Scrolling Text Container */
+    .scrolling-text-wrapper {
+        width: 100%;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 1.5rem 0;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .scrolling-text-container {
+        display: flex;
+        position: relative;
+        width: 100%;
+        height: 60px;
+    }
+    
+    .scroll-text {
+        position: absolute;
+        white-space: nowrap;
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: 8px;
+        text-transform: uppercase;
+        color: #000;
+        opacity: 0;
+        transform: translateX(100vw);
+        transition: none;
+    }
+    
+    .scroll-text.active {
+        animation: scrollAcross 8s linear;
+        opacity: 1;
+    }
+    
+    @keyframes scrollAcross {
+        0% {
+            transform: translateX(100vw);
+        }
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+    
+    .btn-shop {
+        background: #000;
+        border: 1px solid #000;
+        color: #fff;
+        padding: 15px 40px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 2rem;
+    }
+    .btn-shop:hover {
+        background: #fff;
+        color: #000;
+    }
+    
+    /* New Arrivals Section */
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-top: 4rem;
+    }
+    .section-title h2 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        text-transform: uppercase;
+        letter-spacing: 8px;
+        margin-bottom: 1rem;
+    }
+    .section-title .divider {
+        width: 80px;
+        height: 1px;
+        background: #000;
+        margin: 0 auto;
+    }
+    
+    /* Product Card Styles */
+    .product-card {
+        border: none;
+        background: #fff;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+    }
+    .card-img-wrapper {
+        height: 450px;
+        overflow: hidden;
+        background-color: #f8f9fa;
+        position: relative;
+    }
+    .card-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.6s ease;
+    }
+    .product-card:hover .card-img-wrapper img {
+        transform: scale(1.08);
+    }
+    .card-body {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .category-label {
+        color: #999;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .product-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: #000;
+    }
+    .product-price {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        color: #000;
+    }
+    .product-price .original-price {
+        text-decoration: line-through;
+        color: #999;
+        margin-right: 8px;
+        font-size: 0.95rem;
+    }
+    .product-price .sale-price {
+        color: #d9534f;
+    }
+    .btn-view-details {
+        display: inline-block;
+        padding: 12px 30px;
+        border: 1px solid #000;
+        color: #000;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+    .btn-view-details:hover {
+        background: #000;
+        color: #fff;
+    }
+    
+    /* NEW: Explore More Section */
+    .explore-section {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        margin-top: 3rem;
+        border-top: 1px solid #eaeaea;
+    }
+    .explore-title {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 1rem;
+        color: #000;
+    }
+    .explore-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 2rem;
+        font-weight: 300;
+    }
+    .explore-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: transparent;
+        border: 2px solid #000;
+        color: #000;
+        padding: 15px 40px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .explore-btn:hover {
+        background: #000;
+        color: #fff;
+        transform: translateX(10px);
+    }
+    .explore-btn i {
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+    }
+    .explore-btn:hover i {
+        transform: translateX(5px);
+    }
+</style>
 
-<!-- Featured Products -->
-<h2 class="mb-4">Featured Products</h2>
-<div class="row">
-    {% for product in featured_products %}
-    <div class="col-md-3 mb-4">
-        <div class="card h-100">
-            {% if product.images %}
-                <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" class="card-img-top" alt="{{ product.name }}">
-            {% else %}
-                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
-                    <span>No Image</span>
-                </div>
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ product.name }}</h5>
-                <p class="card-text text-muted">{{ product.category.name }}</p>
-                <p class="card-text">
-                    {% if product.sale_price %}
-                        <span class="text-decoration-line-through text-muted">Rs. {{ product.regular_price }}</span>
-                        <span class="text-danger fw-bold">Rs. {{ product.sale_price }}</span>
-                    {% else %}
-                        <span class="fw-bold">Rs. {{ product.regular_price }}</span>
-                    {% endif %}
-                </p>
-                <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="btn btn-outline-primary w-100">View Details</a>
-            </div>
+<!-- Hero Section with Scrolling Text -->
+<div class="hero-banner">
+    <div class="hero-content">
+        <h1 class="hero-title">MANSA</h1>
+        <p class="hero-subtitle">Timeless elegance, crafted for you</p>
+        <a href="{{ url_for('main.shop') }}" class="btn-shop">Shop Collection</a>
+    </div>
+    
+    <!-- Scrolling Text Banner -->
+    <div class="scrolling-text-wrapper">
+        <div class="scrolling-text-container" id="scrollingContainer">
+            <div class="scroll-text">✨ NEW COLLECTION NOW AVAILABLE</div>
+            <div class="scroll-text">🎁 SPECIAL DISCOUNT: 20% OFF ON ALL DRESSES</div>
+            <div class="scroll-text">🚚 FREE ISLAND-WIDE DELIVERY ON ORDERS OVER RS. 15000</div>
+            <div class="scroll-text">💫 PREMIUM QUALITY GARMENTS TAILORED FOR YOU</div>
         </div>
     </div>
-    {% else %}
-    <div class="col-12">
-        <p class="text-center text-muted">No products available yet. Check back soon!</p>
-    </div>
-    {% endfor %}
 </div>
+
+<!-- New Arrivals Section -->
+<div class="container py-5">
+    <div class="section-title">
+        <h2>New Arrivals</h2>
+        <div class="divider"></div>
+    </div>
+
+    <div class="row">
+        {% for product in featured_products %}
+        <div class="col-md-3 mb-5">
+            <div class="card product-card h-100" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
+                <div class="card-img-wrapper">
+                    {% if product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="h-100 d-flex align-items-center justify-content-center text-muted bg-light">
+                            <i class="bi bi-image display-4"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="category-label">{{ product.category.name }}</p>
+                    <h6 class="product-name">{{ product.name }}</h6>
+                    <p class="product-price">
+                        {% if product.sale_price %}
+                            <span class="original-price">Rs. {{ product.regular_price }}</span>
+                            <span class="sale-price">Rs. {{ product.sale_price }}</span>
+                        {% else %}
+                            Rs. {{ product.regular_price }}
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('main.product_detail', product_id=product.product_id) }}" class="btn-view-details" onclick="event.stopPropagation()">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">No products available yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- NEW: Explore More Section -->
+<div class="explore-section">
+    <h2 class="explore-title">Discover More</h2>
+    <p class="explore-subtitle">Find the perfect pieces that match your unique style</p>
+    <a href="{{ url_for('main.shop') }}" class="explore-btn">
+        Explore Full Collection
+        <i class="bi bi-arrow-right"></i>
+    </a>
+</div>
+
+<script>
+    // Scrolling Text Animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const texts = document.querySelectorAll('.scroll-text');
+        let currentIndex = 0;
+        
+        function showNextText() {
+            // Hide current text
+            texts[currentIndex].classList.remove('active');
+            
+            // Move to next text
+            currentIndex = (currentIndex + 1) % texts.length;
+            
+            // Show next text after a small delay
+            setTimeout(() => {
+                texts[currentIndex].classList.add('active');
+            }, 500);
+        }
+        
+        // Show first text immediately
+        texts[0].classList.add('active');
+        
+        // Set interval for scrolling (8s animation + 2s pause = 10s total)
+        setInterval(showNextText, 10000);
+    });
+</script>
 {% endblock %}

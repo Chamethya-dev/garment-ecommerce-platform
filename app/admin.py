@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import Product, Category, ProductVariant, ProductImage, Order, User
+from app.models import Product, Category, ProductVariant, ProductImage, Order, User, Collection
 from app.auth import admin_required
 from collections import defaultdict
 from app.data_science import get_rfm_segmentation, forecast_sales
@@ -48,7 +48,7 @@ def add_product(product_id=None):
         description = request.form.get('description')
         regular_price = request.form.get('regular_price')
         sale_price = request.form.get('sale_price') or None
-        product_color = request.form.get('product_color') # NEW: Single color for the whole product
+        product_color = request.form.get('product_color')
         
         if product:
             product.name = name
@@ -66,7 +66,6 @@ def add_product(product_id=None):
             
         db.session.commit()
 
-        # --- HANDLE VARIANTS (Sizes & Stock Only) ---
         variant_ids = request.form.getlist('variant_ids')
         sizes = request.form.getlist('sizes')
         stocks = request.form.getlist('stocks')
@@ -84,7 +83,7 @@ def add_product(product_id=None):
                 variant = ProductVariant.query.get(vid)
                 if variant and variant.product_id == product.product_id:
                     variant.size = size
-                    variant.color = product_color # Apply the single product color
+                    variant.color = product_color
                     variant.stock_quantity = stock
                     variant.sku = sku
                     processed_variant_ids.append(variant.variant_id)
@@ -104,7 +103,6 @@ def add_product(product_id=None):
                     db.session.delete(v)
         db.session.commit()
 
-        # --- HANDLE IMAGES ---
         files = request.files.getlist('images')
         if files:
             for index, file in enumerate(files):
@@ -257,7 +255,7 @@ def add_collection():
         flash('Collection created successfully!', 'success')
         return redirect(url_for('admin.manage_collections'))
     
-    return render_template('admin/collection_form.html', collection=None)
+    return render_template('admin/collection_form.html', collection=None, all_products=[])
 
 @admin.route('/collection/edit/<int:collection_id>', methods=['GET', 'POST'])
 @login_required
@@ -271,7 +269,6 @@ def edit_collection(collection_id):
         collection.description = request.form.get('description')
         collection.display_order = int(request.form.get('display_order', 0))
         
-        # Handle product associations
         product_ids = request.form.getlist('products')
         collection.products = Product.query.filter(Product.product_id.in_(product_ids)).all() if product_ids else []
         

@@ -4,31 +4,66 @@
 {% block content %}
 <style>
     .collection-section {
-        margin-bottom: 6rem;
+        margin-bottom: 0;
         scroll-margin-top: 100px;
     }
     
-    .collection-header {
+    /* Header Backgrounds */
+    .collection-header-wrapper {
+        padding: 6rem 2rem 4rem;
         text-align: center;
-        margin-bottom: 3rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid #eaeaea;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 350px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .collection-header-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 1;
+    }
+    
+    .collection-header {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+        color: #fff;
     }
     
     .collection-title {
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: 300;
         letter-spacing: 5px;
         text-transform: uppercase;
         margin-bottom: 1rem;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
     }
     
     .collection-description {
-        font-size: 1.1rem;
-        color: #666;
+        font-size: 1.2rem;
+        opacity: 0.95;
         max-width: 600px;
         margin: 0 auto;
+        line-height: 1.6;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
     }
+    
+    /* Clean White Product Area */
+    .collection-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+        background: #ffffff; /* Changed to pure white */
+    }
+    
+    /* Removed the alternating gray backgrounds */
     
     .collection-grid {
         display: grid;
@@ -42,17 +77,23 @@
         background: #fff;
         transition: all 0.4s ease;
         cursor: pointer;
+        border-radius: 8px;
+        overflow: hidden;
+        /* Slightly stronger shadow to pop against the white background */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        border: 1px solid #f0f0f0;
     }
     
     .product-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        border-color: transparent;
     }
     
     .product-image {
         height: 400px;
         overflow: hidden;
-        background: #f8f9fa;
+        background: #fafafa;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -72,6 +113,7 @@
     .product-info {
         padding: 1.5rem;
         text-align: center;
+        background: #fff;
     }
     
     .product-name {
@@ -88,13 +130,19 @@
     
     .explore-toggle {
         text-align: center;
-        padding: 2rem;
+        padding: 1rem 3rem;
         cursor: pointer;
-        border: 2px solid #000;
-        display: inline-block;
+        border: 1px solid #000;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
         margin: 2rem auto;
         transition: all 0.3s ease;
         background: transparent;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     
     .explore-toggle:hover {
@@ -124,77 +172,101 @@
         from { opacity: 0; transform: translateY(-20px); }
         to { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Subtle separator between collections instead of a harsh line */
+    .collection-section + .collection-section {
+        border-top: 1px solid #f0f0f0;
+    }
 </style>
 
-<div class="container py-5">
-    {% for collection in collections %}
-    <div class="collection-section" id="collection-{{ collection.slug }}">
-        <div class="collection-header">
-            <h1 class="collection-title">{{ collection.name }}</h1>
-            <p class="collection-description">{{ collection.description }}</p>
-        </div>
-        
-        {% set collection_products = collection.products %}
-        
-        {% if collection_products %}
-        <div class="collection-grid" id="grid-{{ collection.collection_id }}">
-            {% for product in collection_products[:4] %}
-            <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
-                <div class="product-image">
-                    {% if product.images %}
-                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
-                             alt="{{ product.name }}">
-                    {% else %}
-                        <div class="text-muted">
-                            <i class="bi bi-image display-4"></i>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="product-info">
-                    <h3 class="product-name">{{ product.name }}</h3>
-                    <p class="product-price">Rs. {{ product.regular_price }}</p>
-                </div>
+<div>
+{% for collection in collections %}
+{% set collection_name_lower = collection.name.lower() %}
+
+{# Default background #}
+{% set bg_style = "background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8))" %}
+
+{# Check for keywords - order matters! #}
+{% if 'summer' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920') center/cover" %}
+{% elif 'floral' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1920') center/cover" %}
+{% elif 'autumn' in collection_name_lower or 'fall' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507371341440-1e9a37f1f9e7?w=1920') center/cover" %}
+{% elif 'harvest' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920') center/cover" %}
+{% elif 'café' in collection_name_lower or 'cafe' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1920') center/cover" %}
+{% elif 'winter' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1483664852095-d6cc6870705d?w=1920') center/cover" %}
+{% elif 'resort' in collection_name_lower %}
+    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1920') center/cover" %}
+{% endif %}
+
+<div class="collection-section" id="collection-{{ collection.slug }}">
+    <div class="collection-header-wrapper" style="{{ bg_style }}">
+            <div class="collection-header">
+                <h1 class="collection-title">{{ collection.name }}</h1>
+                <p class="collection-description">{{ collection.description }}</p>
             </div>
-            {% endfor %}
         </div>
         
-        {% if collection_products|length > 4 %}
-        <div class="text-center">
-            <button class="explore-toggle" onclick="toggleCollection({{ collection.collection_id }})">
-                <span id="btn-text-{{ collection.collection_id }}">Explore Collection</span>
-                <i class="bi bi-chevron-down ms-2"></i>
-            </button>
-        </div>
-        
-        <div class="collection-grid hidden-products" id="hidden-{{ collection.collection_id }}">
-            {% for product in collection_products[4:] %}
-            <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
-                <div class="product-image">
-                    {% if product.images %}
-                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
-                             alt="{{ product.name }}">
-                    {% else %}
-                        <div class="text-muted">
-                            <i class="bi bi-image display-4"></i>
-                        </div>
-                    {% endif %}
+        <div class="collection-inner">
+            <div class="collection-grid" id="grid-{{ collection.collection_id }}">
+                {% for product in collection.products[:4] %}
+                <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
+                    <div class="product-image">
+                        {% if product.images %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
+                                 alt="{{ product.name }}">
+                        {% else %}
+                            <div class="text-muted">
+                                <i class="bi bi-image display-4"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">Rs. {{ product.regular_price }}</p>
+                    </div>
                 </div>
-                <div class="product-info">
-                    <h3 class="product-name">{{ product.name }}</h3>
-                    <p class="product-price">Rs. {{ product.regular_price }}</p>
+                {% else %}
+                <div class="col-12 text-center text-muted py-5">
+                    <p>No products in this collection yet.</p>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            
+            {% if collection.products|length > 4 %}
+            <div class="text-center">
+                <button class="explore-toggle" onclick="toggleCollection({{ collection.collection_id }})">
+                    <span id="btn-text-{{ collection.collection_id }}">Explore Collection</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+            </div>
+            
+            <div class="collection-grid hidden-products" id="hidden-{{ collection.collection_id }}">
+                {% for product in collection.products[4:] %}
+                <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
+                    <div class="product-image">
+                        {% if product.images %}
+                            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
+                                 alt="{{ product.name }}">
+                        {% else %}
+                            <div class="text-muted">
+                                <i class="bi bi-image display-4"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">Rs. {{ product.regular_price }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-        
-        {% else %}
-        <div class="text-center py-5 bg-light rounded">
-            <i class="bi bi-flower1 display-1 text-muted"></i>
-            <h3 class="text-muted mt-3">Collection Coming Soon</h3>
-            <p class="text-muted">Our {{ collection.name }} is being prepared. Check back soon!</p>
-        </div>
-        {% endif %}
     </div>
     {% else %}
     <div class="text-center py-5">

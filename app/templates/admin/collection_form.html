@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if collection else 'Add' }} Collection{% endblock %}
+{% block content %}
+<h2>{{ 'Edit' if collection else 'Create' }} Collection</h2>
+
+<form method="POST">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <label class="form-label">Collection Name *</label>
+                <input type="text" name="name" class="form-control" 
+                       value="{{ collection.name if collection else '' }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Slug (URL)</label>
+                <input type="text" name="slug" class="form-control" 
+                       value="{{ collection.slug if collection else '' }}" 
+                       placeholder="summer-floral-collection">
+                <div class="form-text">Leave blank to auto-generate from name</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="3">{{ collection.description if collection else '' }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Display Order</label>
+                <input type="number" name="display_order" class="form-control" 
+                       value="{{ collection.display_order if collection else 0 }}">
+                <div class="form-text">Lower numbers appear first</div>
+            </div>
+            
+            {% if collection %}
+            <div class="mb-4">
+                <label class="form-label">Products in Collection</label>
+                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                    {% for product in all_products %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="products" 
+                               value="{{ product.product_id }}" id="prod{{ product.product_id }}"
+                               {% if product in collection.products %}checked{% endif %}>
+                        <label class="form-check-label" for="prod{{ product.product_id }}">
+                            {{ product.name }} ({{ product.category.name }})
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-success">
+                {{ 'Update Collection' if collection else 'Create Collection' }}
+            </button>
+            <a href="{{ url_for('admin.manage_collections') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

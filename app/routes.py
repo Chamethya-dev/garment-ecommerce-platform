@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
-from app.models import Product, Category, ProductVariant, Order, Wishlist
+from app.models import Product, Category, ProductVariant, Order, Wishlist, Collection
 
 main = Blueprint('main', __name__)
 
@@ -34,20 +34,6 @@ def shop():
     return render_template('shop.html', products=products, categories=categories,
                          selected_category=category_id, search_term=search)
 
-@main.route('/collections')
-def collections():
-    # Get products for the Summer Floral Collection
-    # You can adjust this to filter by category or specific product IDs
-    summer_collection = Product.query.filter(
-        Product.name.ilike('%floral%') | Product.name.ilike('%summer%')
-    ).all()
-    
-    # If no products match, get the first 6 products as fallback
-    if not summer_collection:
-        summer_collection = Product.query.limit(6).all()
-    
-    return render_template('collections.html', products=summer_collection)
-
 @main.route('/product/<int:product_id>')
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
@@ -63,7 +49,7 @@ def product_detail(product_id):
     max_stock_for_bar = 20
     stock_percentage = min((total_stock / max_stock_for_bar) * 100, 100)
     
-    # FIX: Prepare UNIQUE available sizes in Python to avoid Jinja2 errors
+    # Prepare UNIQUE available sizes in Python to avoid Jinja2 errors
     seen_sizes = set()
     unique_sizes = []
     for v in variants:
@@ -107,3 +93,8 @@ def track_order(order_id):
     if order.user_id != current_user.user_id:
         return "Unauthorized", 403
     return render_template('track_order.html', order=order)
+
+@main.route('/collections')
+def collections():
+    collections = Collection.query.filter_by(is_active=True).order_by(Collection.display_order).all()
+    return render_template('collections.html', collections=collections)

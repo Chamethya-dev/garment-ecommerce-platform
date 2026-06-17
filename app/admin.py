@@ -232,3 +232,62 @@ def data_science():
     return render_template('admin/data_science.html', rfm_data=rfm_data, 
                            forecast_dates=forecast_dates or [], 
                            forecast_values=[round(v[0], 2) for v in forecast_values] if forecast_values else [])
+
+# --- COLLECTION MANAGEMENT ---
+@admin.route('/collections')
+@login_required
+@admin_required
+def manage_collections():
+    collections = Collection.query.order_by(Collection.display_order, Collection.name).all()
+    return render_template('admin/collections.html', collections=collections)
+
+@admin.route('/collection/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_collection():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        description = request.form.get('description')
+        slug = name.lower().replace(' ', '-')
+        
+        collection = Collection(name=name, slug=slug, description=description)
+        db.session.add(collection)
+        db.session.commit()
+        
+        flash('Collection created successfully!', 'success')
+        return redirect(url_for('admin.manage_collections'))
+    
+    return render_template('admin/collection_form.html', collection=None)
+
+@admin.route('/collection/edit/<int:collection_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_collection(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    
+    if request.method == 'POST':
+        collection.name = request.form.get('name')
+        collection.slug = request.form.get('slug', collection.name.lower().replace(' ', '-'))
+        collection.description = request.form.get('description')
+        collection.display_order = int(request.form.get('display_order', 0))
+        
+        # Handle product associations
+        product_ids = request.form.getlist('products')
+        collection.products = Product.query.filter(Product.product_id.in_(product_ids)).all() if product_ids else []
+        
+        db.session.commit()
+        flash('Collection updated successfully!', 'success')
+        return redirect(url_for('admin.manage_collections'))
+    
+    all_products = Product.query.all()
+    return render_template('admin/collection_form.html', collection=collection, all_products=all_products)
+
+@admin.route('/collection/delete/<int:collection_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_collection(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    db.session.delete(collection)
+    db.session.commit()
+    flash('Collection deleted successfully!', 'success')
+    return redirect(url_for('admin.manage_collections'))

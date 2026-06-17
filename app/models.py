@@ -40,6 +40,26 @@ class Category(db.Model):
 
     products = db.relationship('Product', backref='category', lazy=True)
 
+# --- COLLECTION MODEL ---
+product_collections = db.Table('product_collections',
+    db.Column('product_id', db.Integer, db.ForeignKey('products.product_id'), primary_key=True),
+    db.Column('collection_id', db.Integer, db.ForeignKey('collections.collection_id'), primary_key=True)
+)
+
+class Collection(db.Model):
+    __tablename__ = 'collections'
+    collection_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    slug = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship with products
+    products = db.relationship('Product', secondary=product_collections, 
+                              backref=db.backref('collections', lazy='dynamic'))
+    
 # --- PRODUCT MODEL ---
 class Product(db.Model):
     __tablename__ = 'products'

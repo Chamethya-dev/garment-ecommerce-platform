@@ -134,11 +134,8 @@
             <p class="collection-description">{{ collection.description }}</p>
         </div>
         
-        {% set collection_products = collection.products %}
-        
-        {% if collection_products %}
         <div class="collection-grid" id="grid-{{ collection.collection_id }}">
-            {% for product in collection_products[:4] %}
+            {% for product in collection.products[:4] %}
             <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
                 <div class="product-image">
                     {% if product.images %}
@@ -155,10 +152,14 @@
                     <p class="product-price">Rs. {{ product.regular_price }}</p>
                 </div>
             </div>
+            {% else %}
+            <div class="col-12 text-center text-muted py-5">
+                <p>No products in this collection yet.</p>
+            </div>
             {% endfor %}
         </div>
         
-        {% if collection_products|length > 4 %}
+        {% if collection.products|length > 4 %}
         <div class="text-center">
             <button class="explore-toggle" onclick="toggleCollection({{ collection.collection_id }})">
                 <span id="btn-text-{{ collection.collection_id }}">Explore Collection</span>
@@ -167,7 +168,7 @@
         </div>
         
         <div class="collection-grid hidden-products" id="hidden-{{ collection.collection_id }}">
-            {% for product in collection_products[4:] %}
+            {% for product in collection.products[4:] %}
             <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
                 <div class="product-image">
                     {% if product.images %}
@@ -185,14 +186,6 @@
                 </div>
             </div>
             {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% else %}
-        <div class="text-center py-5 bg-light rounded">
-            <i class="bi bi-flower1 display-1 text-muted"></i>
-            <h3 class="text-muted mt-3">Collection Coming Soon</h3>
-            <p class="text-muted">Our {{ collection.name }} is being prepared. Check back soon!</p>
         </div>
         {% endif %}
     </div>

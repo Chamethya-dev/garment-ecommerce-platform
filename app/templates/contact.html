@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Contact Us - MANSA{% endblock %}
+
+{% block content %}
+<style>
+    .contact-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+    .contact-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .contact-header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 1rem;
+    }
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 3rem;
+    }
+    .contact-card {
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .contact-card i {
+        font-size: 2.5rem;
+        color: #000;
+        margin-bottom: 1rem;
+    }
+    .contact-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    .contact-card p {
+        color: #666;
+        line-height: 1.6;
+    }
+    .whatsapp-cta {
+        margin-top: 4rem;
+        text-align: center;
+        padding: 3rem;
+        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        border-radius: 12px;
+        color: #fff;
+    }
+    .whatsapp-cta h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    .whatsapp-cta p {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+    }
+    .btn-whatsapp {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        color: #25D366;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+    }
+    .btn-whatsapp:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="contact-page">
+    <div class="contact-header">
+        <h1>Get in Touch</h1>
+        <p style="font-size: 1.1rem; color: #666;">We'd love to hear from you. Here's how you can reach us.</p>
+    </div>
+    
+    <div class="contact-grid">
+        <div class="contact-card">
+            <i class="bi bi-chat-dots"></i>
+            <h3>WhatsApp Us</h3>
+            <p>Quick responses for all your queries<br>Mon - Sat: 9:00 AM - 6:00 PM</p>
+            <p style="margin-top: 1rem; font-weight: 600;">+94 77 123 4567</p>
+        </div>
+        
+        <div class="contact-card">
+            <i class="bi bi-envelope"></i>
+            <h3>Email Us</h3>
+            <p>For detailed inquiries and custom orders<br>We'll respond within 24 hours</p>
+            <p style="margin-top: 1rem; font-weight: 600;">hello@mansa.lk</p>
+        </div>
+        
+        <div class="contact-card">
+            <i class="bi bi-geo-alt"></i>
+            <h3>Visit Our Studio</h3>
+            <p>By appointment only<br>Akuressa, Matara, Sri Lanka</p>
+        </div>
+    </div>
+    
+    <div class="whatsapp-cta">
+        <h2>Need a Custom Design?</h2>
+        <p>Want to customize your order? Chat with us directly on WhatsApp for personalized service!</p>
+        <a href="https://wa.me/94771234567?text=Hello%20welcome%20to%20Mansa%20clothing.%20I'm%20interested%20in%20customizing%20an%20order.%20How%20can%20you%20help%20me?" 
+           class="btn-whatsapp" target="_blank">
+            <i class="bi bi-whatsapp"></i>
+            Chat on WhatsApp
+        </a>
+    </div>
+</div>
+{% endblock %}

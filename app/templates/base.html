@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MANSA{% endblock %}</title>
+    <!-- Favicon -->
+     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    
+     <title>{% block title %}MANSA{% endblock %}</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -152,7 +155,13 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid px-5">
             <!-- Brand -->
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">MANSA</a>
+            <!-- Brand with Logo -->
+<a class="navbar-brand" href="{{ url_for('main.home') }}">
+    <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="MANSA" 
+         style="height: 80px; width: auto; display: block;"
+         onerror="this.style.display='none'; this.parentElement.innerHTML='MANSA';">
+</a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -312,15 +321,15 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <h5 class="fw-bold text-dark">MANSA</h5>
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="MANSA" style="height: 50px; width: auto; margin-bottom: 1rem;">
                     <p class="small">Timeless elegance, crafted for you. Discover our curated collection of premium garments.</p>
                 </div>
                 <div class="col-md-4 mb-4">
                     <h6 class="fw-bold text-dark text-uppercase small">Customer Care</h6>
                     <ul class="list-unstyled small">
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Shipping & Returns</a></li>
-                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="{{ url_for('main.contact') }}">Contact Us</a></li>
+                        <li><a href="{{ url_for('main.shipping') }}">Shipping & Returns</a></li>
+                        <li><a href="{{ url_for('main.size_guide') }}">Size Guide</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-4">
@@ -340,15 +349,53 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script to keep panel open if login fails -->
+    <!-- Script to keep panel open if login fails (only for non-authenticated users) -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.alert-danger, .alert-success');
-            if (alerts.length > 0) {
+            const userLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+            
+            // Only open panel if there are alerts AND user is NOT logged in
+            if (alerts.length > 0 && !userLoggedIn) {
                 const panel = new bootstrap.Offcanvas(document.getElementById('accountPanel'));
                 panel.show();
             }
         });
     </script>
+
+    <!-- Floating WhatsApp Button -->
+<a href="https://wa.me/94771234567?text=Hello%20welcome%20to%20Mansa%20clothing.%20How%20can%20I%20help%20you?" 
+   class="floating-whatsapp" target="_blank" title="Chat with us">
+    <i class="bi bi-whatsapp"></i>
+</a>
+
+<style>
+    .floating-whatsapp {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: #25D366;
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    .floating-whatsapp:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+    }
+    .floating-whatsapp i {
+        position: relative;
+        top: -2px;
+    }
+</style>
 </body>
 </html>

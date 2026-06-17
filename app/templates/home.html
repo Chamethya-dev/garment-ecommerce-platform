@@ -23,13 +23,11 @@
         padding: 2rem;
     }
     
-    .hero-title {
-        font-size: 5rem;
-        font-weight: 300;
-        letter-spacing: 15px;
-        margin-bottom: 3rem;
-        color: #000;
-        text-transform: uppercase;
+    .hero-logo {
+        max-width: 500px;
+        height: auto;
+        margin-bottom: 2rem;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }
     
     .hero-subtitle {
@@ -256,7 +254,7 @@
 <!-- Hero Section with Scrolling Text -->
 <div class="hero-banner">
     <div class="hero-content">
-        <h1 class="hero-title">MANSA</h1>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="MANSA" class="hero-logo">
         <p class="hero-subtitle">Timeless elegance, crafted for you</p>
         <a href="{{ url_for('main.shop') }}" class="btn-shop">Shop Collection</a>
     </div>

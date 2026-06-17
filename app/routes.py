@@ -98,3 +98,15 @@ def track_order(order_id):
 def collections():
     collections = Collection.query.filter_by(is_active=True).order_by(Collection.display_order).all()
     return render_template('collections.html', collections=collections)
+
+@main.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+@main.route('/shipping')
+def shipping():
+    return render_template('shipping.html')
+
+@main.route('/size-guide')
+def size_guide():
+    return render_template('size_guide.html')

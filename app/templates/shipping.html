@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Shipping & Returns - MANSA{% endblock %}
+
+{% block content %}
+<style>
+    .info-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+    .info-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .info-header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+    }
+    .info-section {
+        margin-bottom: 3rem;
+    }
+    .info-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        color: #000;
+    }
+    .info-section h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #333;
+    }
+    .info-section p, .info-section ul, .info-section ol {
+        color: #666;
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+    .info-section ul, .info-section ol {
+        padding-left: 1.5rem;
+    }
+    .info-section li {
+        margin-bottom: 0.5rem;
+    }
+    .highlight-box {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        border-left: 4px solid #000;
+        margin: 2rem 0;
+    }
+    .zone-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    .zone-table th, .zone-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .zone-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #000;
+    }
+</style>
+
+<div class="info-page">
+    <div class="info-header">
+        <h1>Shipping & Returns</h1>
+    </div>
+    
+    <div class="info-section">
+        <h2>📦 Shipping Information</h2>
+        <div class="highlight-box">
+            <p><strong>Free Delivery within Matara District</strong> on orders over Rs. 5,000</p>
+        </div>
+        
+        <p>All orders are carefully packaged and dispatched directly from our studio in <strong>Akuressa, Matara</strong> within 1-2 business days. You'll receive a tracking number via WhatsApp once your order ships.</p>
+        
+        <h3>Delivery Zones & Charges</h3>
+        <table class="zone-table">
+            <thead>
+                <tr>
+                    <th>Delivery Zone</th>
+                    <th>Areas Covered</th>
+                    <th>Delivery Fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Matara District (Local)</strong></td>
+                    <td>Matara, Akuressa, Weligama, Mirissa, Hakmana, Dikwella</td>
+                    <td>Rs. 250</td>
+                </tr>
+                <tr>
+                    <td><strong>Southern Province</strong></td>
+                    <td>Galle, Hambantota, Tangalle, Ahangama, Hikkaduwa, Ambalangoda</td>
+                    <td>Rs. 350</td>
+                </tr>
+                <tr>
+                    <td><strong>Western Province</strong></td>
+                    <td>Colombo, Gampaha, Kalutara</td>
+                    <td>Rs. 450</td>
+                </tr>
+                <tr>
+                    <td><strong>Rest of Island</strong></td>
+                    <td>Kandy, Jaffna, Kurunegala, Anuradhapura, and all other districts</td>
+                    <td>Rs. 500</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>Estimated Delivery Times</h3>
+        <ul>
+            <li><strong>Matara District:</strong> 1-2 business days</li>
+            <li><strong>Southern Province:</strong> 2-3 business days</li>
+            <li><strong>Western Province:</strong> 3-4 business days</li>
+            <li><strong>Rest of Island:</strong> 4-5 business days</li>
+        </ul>
+    </div>
+    
+    <div class="info-section">
+        <h2>🔄 Returns & Exchanges</h2>
+        <p>We want you to love your purchase! If you're not completely satisfied, we're here to help.</p>
+        
+        <h3>Return Policy</h3>
+        <ul>
+            <li>Items can be returned within <strong>7 days</strong> of delivery</li>
+            <li>Items must be unused, unwashed, and in original condition with tags attached</li>
+            <li>Customized or altered items cannot be returned</li>
+            <li>Return shipping costs are the responsibility of the customer</li>
+        </ul>
+        
+        <h3>How to Return</h3>
+        <ol>
+            <li>Contact us at <strong>hello@mansa.lk</strong> or WhatsApp <strong>+94 77 123 4567</strong></li>
+            <li>Provide your order number and reason for return</li>
+            <li>We'll send you return instructions</li>
+            <li>Once we receive and inspect the item at our Akuressa studio, we'll process your refund or exchange</li>
+        </ol>
+        
+        <div class="highlight-box">
+            <p><strong>Note:</strong> Refunds will be processed to the original payment method within 5-7 business days.</p>
+        </div>
+        
+        <h3>Exchanges</h3>
+        <p>We offer free exchanges for size issues. Simply contact us within 7 days of receiving your order, and we'll arrange the exchange at no additional cost.</p>
+    </div>
+    
+    <div class="info-section">
+        <h2>❓ Need Help?</h2>
+        <p>If you have any questions about shipping or returns, please don't hesitate to contact us:</p>
+        <ul>
+            <li>📱 WhatsApp: +94 77 123 4567</li>
+            <li>📧 Email: hello@mansa.lk</li>
+            <li>🕐 Mon - Sat: 9:00 AM - 6:00 PM</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

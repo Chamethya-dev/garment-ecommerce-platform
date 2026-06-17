@@ -1,47 +1,203 @@
 {% extends "base.html" %}
-{% block title %}Checkout{% endblock %}
+{% block title %}Checkout - MANSA{% endblock %}
+
 {% block content %}
-<h2>Checkout</h2>
-<div class="row">
-    <div class="col-md-8">
-        <form action="{{ url_for('cart.place_order') }}" method="POST">
-            <div class="mb-3">
-                <label class="form-label">Shipping Address</label>
-                <textarea name="shipping_address" class="form-control" rows="3" required>{{ current_user.default_district or '' }}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Select Delivery Zone</label>
-                <select name="delivery_fee" id="zoneSelect" class="form-select" required onchange="updateTotal()">
-                    <option value="0" data-name="Select Zone">Select Zone</option>
-                    {% for zone in zones %}
-                        <option value="{{ zone.delivery_fee }}" data-name="{{ zone.zone_name }}">{{ zone.zone_name }} - Rs. {{ zone.delivery_fee }}</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" name="shipping_district" id="districtInput">
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg w-100">Place Order</button>
-        </form>
+<style>
+    .checkout-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+    }
+    .checkout-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .checkout-header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 0.5rem;
+    }
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 3rem;
+    }
+    .checkout-form-section {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .form-section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        padding: 0.75rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #000;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    }
+    .order-summary {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        position: sticky;
+        top: 100px;
+    }
+    .order-summary h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+    }
+    .summary-row.total {
+        font-size: 1.3rem;
+        font-weight: 700;
+        padding-top: 1rem;
+        border-top: 2px solid #000;
+        margin-top: 1rem;
+    }
+    .btn-place-order {
+        background: #000;
+        color: #fff;
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        border: none;
+        border-radius: 6px;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .btn-place-order:hover {
+        background: #333;
+        transform: translateY(-2px);
+    }
+    .delivery-info {
+        background: #fff3cd;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #856404;
+    }
+    @media (max-width: 768px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="checkout-page">
+    <div class="checkout-header">
+        <h1>CHECKOUT</h1>
+        <p style="color: #666;">Complete your order</p>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h4>Order Summary</h4>
-                <p>Subtotal: Rs. {{ total }}</p>
-                <p>Delivery Fee: Rs. <span id="deliveryFee">0</span></p>
-                <hr>
-                <h3>Total: Rs. <span id="grandTotal">{{ total }}</span></h3>
+    
+    <div class="checkout-grid">
+        <div class="checkout-form-section">
+            <form action="{{ url_for('cart.place_order') }}" method="POST">
+                <h3 class="form-section-title">Shipping Information</h3>
+                
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" value="{{ current_user.name }}" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" value="{{ current_user.phone }}" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Shipping Address *</label>
+                    <textarea name="shipping_address" class="form-control" rows="3" placeholder="Enter your full delivery address" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Select Delivery Zone *</label>
+                    <select name="delivery_fee" id="zoneSelect" class="form-select" required onchange="updateTotal()">
+                        <option value="0" data-name="">-- Select Your District --</option>
+                        {% for zone in zones %}
+                            <option value="{{ zone.delivery_fee }}" data-name="{{ zone.zone_name }}">
+                                {{ zone.zone_name }} - Rs. {{ zone.delivery_fee }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="shipping_district" id="districtInput">
+                    <div class="delivery-info">
+                        <i class="bi bi-truck me-2"></i>
+                        <strong>Shipping from Akuressa, Matara.</strong> Delivery within 2-5 business days.
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-place-order">
+                    <i class="bi bi-check-circle me-2"></i>PLACE ORDER
+                </button>
+            </form>
+        </div>
+        
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>Rs. {{ total }}</span>
+            </div>
+            
+            <div class="summary-row">
+                <span>Delivery Fee</span>
+                <span>Rs. <span id="deliveryFee">0</span></span>
+            </div>
+            
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>Rs. <span id="grandTotal">{{ total }}</span></span>
+            </div>
+            
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #ddd;">
+                <p style="font-size: 0.85rem; color: #666; margin: 0;">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Guaranteed safe checkout. Cash on delivery available.
+                </p>
             </div>
         </div>
     </div>
 </div>
+
 <script>
     function updateTotal() {
         const select = document.getElementById('zoneSelect');
         const fee = select.value;
         const name = select.options[select.selectedIndex].getAttribute('data-name');
         const subtotal = {{ total }};
+        
         document.getElementById('deliveryFee').innerText = fee;
-        document.getElementById('grandTotal').innerText = subtotal + parseFloat(fee);
+        document.getElementById('grandTotal').innerText = parseFloat(subtotal) + parseFloat(fee);
         document.getElementById('districtInput').value = name;
     }
 </script>

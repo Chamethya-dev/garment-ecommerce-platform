@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Size Guide - MANSA{% endblock %}
+
+{% block content %}
+<style>
+    .size-page {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+    }
+    .size-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    .size-header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 1rem;
+    }
+    .size-chart-container {
+        background: #fff;
+        border: 1px solid #eaeaea;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 3rem;
+    }
+    .size-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .size-table th, .size-table td {
+        padding: 1rem;
+        text-align: center;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .size-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+    }
+    .size-table td:first-child {
+        text-align: left;
+        font-weight: 500;
+        padding-left: 2rem;
+    }
+    .size-table tr:hover {
+        background: #f8f9fa;
+    }
+    .measurement-tips {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    .measurement-tips h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+    .tip-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+    .tip-item {
+        display: flex;
+        gap: 1rem;
+    }
+    .tip-item i {
+        font-size: 1.5rem;
+        color: #000;
+    }
+    .tip-item h4 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .tip-item p {
+        color: #666;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    .whatsapp-help {
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        border-radius: 8px;
+        color: #fff;
+    }
+    .whatsapp-help p {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    .btn-whatsapp-small {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        color: #25D366;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.3s ease;
+    }
+    .btn-whatsapp-small:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="size-page">
+    <div class="size-header">
+        <h1>Size Guide</h1>
+        <p style="font-size: 1.1rem; color: #666;">Find your perfect fit with our comprehensive size chart</p>
+    </div>
+    
+    <div class="measurement-tips">
+        <h3>📏 How to Measure Yourself</h3>
+        <div class="tip-grid">
+            <div class="tip-item">
+                <i class="bi bi-rulers"></i>
+                <div>
+                    <h4>Chest/Bust</h4>
+                    <p>Measure around the fullest part of your chest, keeping the tape measure horizontal and snug but not tight.</p>
+                </div>
+            </div>
+            <div class="tip-item">
+                <i class="bi bi-arrows-expand"></i>
+                <div>
+                    <h4>Waist</h4>
+                    <p>Measure around your natural waistline (the narrowest part of your torso), usually just above the belly button.</p>
+                </div>
+            </div>
+            <div class="tip-item">
+                <i class="bi bi-arrows-fullscreen"></i>
+                <div>
+                    <h4>Hips</h4>
+                    <p>Measure around the fullest part of your hips and buttocks, keeping the tape parallel to the floor.</p>
+                </div>
+            </div>
+            <div class="tip-item">
+                <i class="bi bi-arrow-down-up"></i>
+                <div>
+                    <h4>Length</h4>
+                    <p>For dresses and tops, measure from the highest point of your shoulder down to the desired length.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="size-chart-container">
+        <table class="size-table">
+            <thead>
+                <tr>
+                    <th>Measurement</th>
+                    <th>XS</th>
+                    <th>S</th>
+                    <th>M</th>
+                    <th>L</th>
+                    <th>XL</th>
+                    <th>XXL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Chest (inches)</td>
+                    <td>32-34</td>
+                    <td>34-36</td>
+                    <td>36-38</td>
+                    <td>38-40</td>
+                    <td>40-42</td>
+                    <td>42-44</td>
+                </tr>
+                <tr>
+                    <td>Waist (inches)</td>
+                    <td>24-26</td>
+                    <td>26-28</td>
+                    <td>28-30</td>
+                    <td>30-32</td>
+                    <td>32-34</td>
+                    <td>34-36</td>
+                </tr>
+                <tr>
+                    <td>Hips (inches)</td>
+                    <td>34-36</td>
+                    <td>36-38</td>
+                    <td>38-40</td>
+                    <td>40-42</td>
+                    <td>42-44</td>
+                    <td>44-46</td>
+                </tr>
+                <tr>
+                    <td>Length - Dress (inches)</td>
+                    <td>42</td>
+                    <td>43</td>
+                    <td>44</td>
+                    <td>45</td>
+                    <td>46</td>
+                    <td>47</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="highlight-box" style="background: #fff3cd; border-left-color: #ffc107; padding: 1.5rem; margin-bottom: 2rem;">
+        <p style="margin: 0;"><strong>💡 Fit Tips:</strong></p>
+        <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+            <li>If you're between sizes, we recommend sizing up for a more comfortable fit</li>
+            <li>Our garments are designed with a regular fit unless specified otherwise</li>
+            <li>Fabric type may affect fit - stretchy fabrics offer more flexibility</li>
+        </ul>
+    </div>
+    
+    <div class="whatsapp-help">
+        <p><strong>Not sure about your size?</strong> Chat with us for personalized sizing assistance!</p>
+        <a href="https://wa.me/94771234567?text=Hi%20Mansa!%20I%20need%20help%20with%20sizing.%20Can%20you%20assist%20me?" 
+           class="btn-whatsapp-small" target="_blank">
+            <i class="bi bi-whatsapp"></i>
+            Get Size Help
+        </a>
+    </div>
+</div>
+{% endblock %}

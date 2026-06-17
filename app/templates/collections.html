@@ -8,7 +8,6 @@
         scroll-margin-top: 100px;
     }
     
-    /* Header Backgrounds */
     .collection-header-wrapper {
         padding: 6rem 2rem 4rem;
         text-align: center;
@@ -55,15 +54,12 @@
         text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
     }
     
-    /* Clean White Product Area */
     .collection-inner {
         max-width: 1400px;
         margin: 0 auto;
         padding: 4rem 2rem;
-        background: #ffffff; /* Changed to pure white */
+        background: #ffffff;
     }
-    
-    /* Removed the alternating gray backgrounds */
     
     .collection-grid {
         display: grid;
@@ -79,7 +75,6 @@
         cursor: pointer;
         border-radius: 8px;
         overflow: hidden;
-        /* Slightly stronger shadow to pop against the white background */
         box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
         border: 1px solid #f0f0f0;
     }
@@ -173,7 +168,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Subtle separator between collections instead of a harsh line */
     .collection-section + .collection-section {
         border-top: 1px solid #f0f0f0;
     }
@@ -183,97 +177,101 @@
 {% for collection in collections %}
 {% set collection_name_lower = collection.name.lower() %}
 
-{# Default background #}
-{% set bg_style = "background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8))" %}
-
-{# Check for keywords - order matters! #}
-{% if 'summer' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920') center/cover" %}
-{% elif 'floral' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1920') center/cover" %}
-{% elif 'autumn' in collection_name_lower or 'fall' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507371341440-1e9a37f1f9e7?w=1920') center/cover" %}
-{% elif 'harvest' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920') center/cover" %}
-{% elif 'café' in collection_name_lower or 'cafe' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1920') center/cover" %}
-{% elif 'winter' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1483664852095-d6cc6870705d?w=1920') center/cover" %}
-{% elif 'resort' in collection_name_lower %}
-    {% set bg_style = "background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1920') center/cover" %}
-{% endif %}
+<!-- DEBUG: Collection name = "{{ collection_name_lower }}" -->
 
 <div class="collection-section" id="collection-{{ collection.slug }}">
-    <div class="collection-header-wrapper" style="{{ bg_style }}">
-            <div class="collection-header">
-                <h1 class="collection-title">{{ collection.name }}</h1>
-                <p class="collection-description">{{ collection.description }}</p>
+    <div class="collection-header-wrapper" style="
+        {% if 'summer' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920') center/cover;
+        {% elif 'floral' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1920') center/cover;
+        {% elif 'autumn' in collection_name_lower or 'fall' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1507371341440-1e9a37f1f9e7?w=1920') center/cover;
+        {% elif 'harvest' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920') center/cover;
+        {% elif 'café' in collection_name_lower or 'cafe' in collection_name_lower or 'café' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1920') center/cover;
+        {% elif 'gingham' in collection_name_lower or 'checkered' in collection_name_lower or 'check' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1620799140408-ed5341cd2431?w=1920') center/cover;
+        {% elif 'winter' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1483664852095-d6cc6870705d?w=1920') center/cover;
+        {% elif 'resort' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1920') center/cover;
+        {% elif 'classic' in collection_name_lower %}
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1920') center/cover;
+        {% else %}
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+        {% endif %}
+    ">
+        <div class="collection-header">
+            <h1 class="collection-title">{{ collection.name }}</h1>
+            <p class="collection-description">{{ collection.description }}</p>
+        </div>
+    </div>
+    
+    <div class="collection-inner">
+        <div class="collection-grid" id="grid-{{ collection.collection_id }}">
+            {% for product in collection.products[:4] %}
+            <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
+                <div class="product-image">
+                    {% if product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
+                             alt="{{ product.name }}">
+                    {% else %}
+                        <div class="text-muted">
+                            <i class="bi bi-image display-4"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-price">Rs. {{ product.regular_price }}</p>
+                </div>
             </div>
+            {% else %}
+            <div class="col-12 text-center text-muted py-5">
+                <p>No products in this collection yet.</p>
+            </div>
+            {% endfor %}
         </div>
         
-        <div class="collection-inner">
-            <div class="collection-grid" id="grid-{{ collection.collection_id }}">
-                {% for product in collection.products[:4] %}
-                <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
-                    <div class="product-image">
-                        {% if product.images %}
-                            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
-                                 alt="{{ product.name }}">
-                        {% else %}
-                            <div class="text-muted">
-                                <i class="bi bi-image display-4"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-name">{{ product.name }}</h3>
-                        <p class="product-price">Rs. {{ product.regular_price }}</p>
-                    </div>
-                </div>
-                {% else %}
-                <div class="col-12 text-center text-muted py-5">
-                    <p>No products in this collection yet.</p>
-                </div>
-                {% endfor %}
-            </div>
-            
-            {% if collection.products|length > 4 %}
-            <div class="text-center">
-                <button class="explore-toggle" onclick="toggleCollection({{ collection.collection_id }})">
-                    <span id="btn-text-{{ collection.collection_id }}">Explore Collection</span>
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-            
-            <div class="collection-grid hidden-products" id="hidden-{{ collection.collection_id }}">
-                {% for product in collection.products[4:] %}
-                <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
-                    <div class="product-image">
-                        {% if product.images %}
-                            <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
-                                 alt="{{ product.name }}">
-                        {% else %}
-                            <div class="text-muted">
-                                <i class="bi bi-image display-4"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-name">{{ product.name }}</h3>
-                        <p class="product-price">Rs. {{ product.regular_price }}</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
+        {% if collection.products|length > 4 %}
+        <div class="text-center">
+            <button class="explore-toggle" onclick="toggleCollection({{ collection.collection_id }})">
+                <span id="btn-text-{{ collection.collection_id }}">Explore Collection</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
         </div>
+        
+        <div class="collection-grid hidden-products" id="hidden-{{ collection.collection_id }}">
+            {% for product in collection.products[4:] %}
+            <div class="product-card" onclick="window.location.href='{{ url_for('main.product_detail', product_id=product.product_id) }}'">
+                <div class="product-image">
+                    {% if product.images %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.images[0].image_url) }}" 
+                             alt="{{ product.name }}">
+                    {% else %}
+                        <div class="text-muted">
+                            <i class="bi bi-image display-4"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-price">Rs. {{ product.regular_price }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="text-center py-5">
-        <h2 class="text-muted">No collections available</h2>
-        <p class="text-muted">Check back soon for our curated collections!</p>
-    </div>
-    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <h2 class="text-muted">No collections available</h2>
+    <p class="text-muted">Check back soon for our curated collections!</p>
+</div>
+{% endfor %}
 </div>
 
 <script>

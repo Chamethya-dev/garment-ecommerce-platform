@@ -7,16 +7,18 @@
 - **Profile Management:** Update name, email, password, and default delivery district.
 - **Browse & Search:** Browse products with filters (category, size, color, price). Search products by keywords.
 - **Variant Selection:** View product details (images, description) and select specific variants (Size, Color). System shows real-time stock availability for the selected variant.
+- **Wishlist:** Add products to a personal wishlist to save them for later.
 - **Cart Management:** Add, remove, and update quantities of specific variants in the cart.
-- **Checkout & Shipping:** Select delivery district (system automatically calculates and adds the delivery fee). Choose payment method (Cash on Delivery, Bank Transfer, Card).
-- **Order Management:** Track order status. Cancel orders *only* if status is "Pending" or "Processing". If status is "Shipped", the cancel option changes to "Request Exchange".
+- **Checkout & Shipping:** Select delivery district (system automatically calculates and adds the delivery fee). Choose payment method (Cash on Delivery, Bank Deposit).
+- **WhatsApp Order Confirmation:** Upon placing an order, the system redirects the customer to WhatsApp with a pre-filled message containing all order details to confirm with the business.
+- **Order Management:** Track order status. Cancel orders *only* if status is "Pending" or "Awaiting Payment". If status is "Shipped", the cancel option is disabled.
 - **Custom Tailoring:** View contact information/banner for custom tailoring inquiries (handled offline).
 
 ### Admin Features
 - **Product Management:** CRUD operations for products and categories. Upload multiple images. Set regular price and optional sale price.
 - **Variant & Inventory Management:** Manage stock at the **variant level** (e.g., Black T-Shirt, Size M). System auto-generates SKUs. Receive low-stock alerts when a *specific variant* drops below 10 units. Out-of-stock variants remain visible on the storefront with an "Out of Stock" badge.
 - **Shipping Zones:** Map districts to specific delivery fees (e.g., Colombo = Rs. 300, Upcountry = Rs. 500).
-- **Order Processing:** Update order statuses (Pending, Processing, Shipped, Delivered, Cancelled, Exchanged). Handle exchange requests for shipped items.
+- **Order Processing:** Update order statuses (Pending, Awaiting Payment, Processing, Shipped, Delivered, Cancelled). Handle exchange requests for shipped items.
 - **Customer Management:** View customer profiles and deactivate accounts.
 - **Analytics Dashboards:** Access sales, revenue, and inventory metrics (Phase 9).
 
@@ -25,6 +27,7 @@
 - Provide secure authentication and role-based access (Customer, Admin).
 - Support ML modules for forecasting, recommendations, and segmentation (Phase 10).
 - Generate analytics dashboards (Phase 9).
+- Automatically restore variant stock to inventory if a customer cancels a pending order.
 
 ## 2. Non-Functional Requirements
 - **Performance:** Handle 1000+ concurrent users with <2s response time.
@@ -44,8 +47,8 @@
 ## 4. User Stories (Expanded)
 - As a customer, I want to filter products by size and color so I can quickly find what fits me.
 - As a customer, I want to see the exact delivery fee for my specific district before I pay, so I know the total cost.
-- As a customer, I want to be able to cancel my order myself if it hasn't shipped yet, but I understand I can only request an exchange once it is marked 'Shipped'.
-- As a customer, I want to track my order status so I know when it will arrive.
+- As a customer, I want to be able to cancel my order myself if it hasn't shipped yet, and have the stock automatically returned to the store.
+- As a customer, I want my order details automatically sent to the business via WhatsApp so I can easily confirm and send payment slips.
 - As an admin, I want to receive low-stock alerts per variant so I can restock specific sizes/colors before they run out.
 - As an admin, I want to view a dashboard of best-selling products so I can adjust marketing campaigns.
 - As a data analyst, I want to generate monthly sales trend reports so I can advise management on production planning.
@@ -56,10 +59,10 @@
 1. Customer browses products and selects a specific variant (Size/Color).
 2. Customer adds the variant to the cart.
 3. Customer proceeds to checkout (system verifies user is logged in).
-4. Customer selects their delivery district (system calculates and adds the delivery fee) and chooses a payment method.
+4. Customer selects their delivery district (system calculates and adds the delivery fee) and chooses a payment method (COD or Bank Deposit).
 5. System validates the order, **deducts the specific variant stock**, and creates the order record with a "Pending" status.
-6. Customer receives confirmation details.
-7. Order status updates to “Processing” by Admin.
+6. System redirects the customer to WhatsApp with a pre-filled message containing the Order ID, items, and total.
+7. Order status updates to “Processing” by Admin after WhatsApp confirmation.
 
 ### UC2: Admin Updates Inventory
 1. Admin logs into dashboard.
@@ -76,7 +79,7 @@
 
 ### UC4: Forecasting Module Predicts Sales (Phase 10)
 1. System extracts historical sales data.
-2. ML model (Prophet/XGBoost) trains on data.
+2. ML model (Prophet/XGBoost) trains on the historical data.
 3. Forecast generated for next month.
 4. Results stored in reports module.
 5. Admin views forecast dashboard.
@@ -84,18 +87,20 @@
 ## 6. Actors
 - **Customer:** End-user buying clothes.
 - **Admin:** Business staff managing store operations.
-- **System:** Automated analytics/ML modules.
+- **System:** Automated backend processes (stock deduction, SKU generation, analytics).
 
 ## 7. System Scope
 - **In Scope:**
   - Online retail operations (catalog, cart, checkout).
   - Admin management (products, variant inventory, orders, shipping zones).
+  - Wishlist functionality.
+  - WhatsApp order confirmation integration.
   - Analytics dashboards (Phase 9).
   - ML modules (forecasting, recommendations, segmentation - Phase 10).
 - **Out of Scope (Future Enhancements / Phase 2):**
   - Guest checkout.
   - Product reviews and ratings.
-  - Wishlist functionality.
+  - Automated online card payment gateways (using WhatsApp/Bank Deposit for MVP).
   - Wholesale/B2B portal operations.
   - Automated logistics/courier API integration (using manual district fee mapping for MVP).
   - Multi-language support.

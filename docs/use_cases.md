@@ -3,12 +3,12 @@
 ## Actors
 - **Customer:** End-user browsing and purchasing garments.
 - **Admin:** Business staff managing products, inventory, orders, and shipping zones.
-- **System:** Automated backend processes (stock deduction, SKU generation, analytics).
+- **System:** Automated backend processes (stock deduction, SKU generation, analytics, WhatsApp redirection).
 
 ---
 
 ## UC1: Customer Purchases a Product
-**Description:** A logged-in customer selects a specific garment variant, adds it to the cart, and completes checkout with district-based shipping.
+**Description:** A logged-in customer selects a specific garment variant, adds it to the cart, and completes checkout with district-based shipping and WhatsApp confirmation.
 **Preconditions:** Customer is registered and logged in. Product variant is in stock.
 **Main Flow:**
 1. Customer browses the catalog and filters by category, size, or color.
@@ -16,10 +16,12 @@
 3. Customer adds the variant to the shopping cart.
 4. Customer proceeds to checkout. System verifies the user is logged in.
 5. Customer selects their delivery district from a dropdown. System automatically calculates and adds the corresponding delivery fee to the total.
-6. Customer selects a payment method (Cash on Delivery, Bank Transfer, or Card) and confirms the order.
-7. **System Action:** Validates the order, **deducts the stock quantity for that specific variant**, and creates the order record with a "Pending" status. Auto-generates an Order ID.
-8. Customer receives an on-screen confirmation and order details.
-**Postconditions:** Order is created, variant stock is reduced, and inventory alerts are recalculated.
+6. Customer selects a payment method (Cash on Delivery or Bank Deposit) and clicks "Place Order".
+7. **System Action:** Validates the order, **deducts the stock quantity for that specific variant**, and creates the order record with a "Pending" (or "Awaiting Payment") status. Auto-generates an Order ID.
+8. **System Action:** Generates a pre-formatted WhatsApp message containing the Order ID, customer details, items, and total.
+9. **System Action:** Automatically redirects the customer to WhatsApp after a 3-second loading screen.
+10. Customer sends the message to the business to finalize the order.
+**Postconditions:** Order is created in the database, variant stock is reduced, and the customer is directed to WhatsApp to confirm.
 
 ---
 
@@ -36,15 +38,17 @@
 
 ---
 
-## UC3: Customer Cancels or Requests Exchange for an Order
-**Description:** A customer attempts to cancel an order or request an exchange based on the order's current status.
+## UC3: Customer Cancels an Order
+**Description:** A customer attempts to cancel an order based on the order's current status.
 **Preconditions:** Customer is logged in and has an existing order.
 **Main Flow:**
-1. Customer navigates to "My Orders" and selects a specific order.
+1. Customer navigates to "My Orders" and selects a specific order to track.
 2. **System Action:** Checks the current `status` of the order.
-   - **If status is "Pending" or "Processing":** System displays a "Cancel Order" button. Customer clicks it, and the system updates the status to "Cancelled" and **restores the variant stock**.
-   - **If status is "Shipped" or "Delivered":** System hides the cancel button and displays a "Request Exchange" button. Customer clicks it, and the system logs an exchange request for Admin review.
-**Postconditions:** Order status is updated, and inventory is restored only if cancelled before shipping.
+   - **If status is "Pending" or "Awaiting Payment":** System displays a "Cancel Order" button. 
+   - **If status is "Processing", "Shipped", or "Delivered":** System hides the cancel button and displays an informational message that the order cannot be cancelled.
+3. Customer clicks "Cancel Order" (if available) and optionally provides a reason.
+4. **System Action:** Updates the order status to "Cancelled", saves the reason in the `notes` column, and **automatically restores the variant stock quantities** to the inventory.
+**Postconditions:** Order status is updated to "Cancelled", and inventory is accurately restored.
 
 ---
 

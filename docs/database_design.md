@@ -62,12 +62,14 @@ The main order record.
 - `order_id` (INT, Primary Key, Auto Increment)
 - `user_id` (INT, Foreign Key -> users.user_id)
 - `order_date` (TIMESTAMP, Default: Current Timestamp)
-- `status` (ENUM: 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Exchanged', Default: 'Pending')
+- `status` (ENUM: 'Pending', 'Awaiting Payment', 'Processing', 'Shipped', 'Delivered', 'Cancelled', Default: 'Pending')
 - `subtotal` (DECIMAL(10, 2), Not Null) *(Sum of item prices)*
 - `delivery_fee` (DECIMAL(10, 2), Not Null)
 - `total_amount` (DECIMAL(10, 2), Not Null) *(subtotal + delivery_fee)*
 - `shipping_district` (VARCHAR(50), Not Null)
 - `shipping_address` (TEXT, Not Null)
+- `payment_method` (VARCHAR(50), Default: 'Cash on Delivery') *(e.g., COD, Bank Deposit)*
+- `notes` (TEXT, Null) *(Used for cancellation reasons or admin notes)*
 
 ### 8. `order_items`
 Line items for each order. Captures the price *at the time of purchase* to protect against future price changes.
@@ -77,12 +79,20 @@ Line items for each order. Captures the price *at the time of purchase* to prote
 - `quantity` (INT, Not Null)
 - `unit_price` (DECIMAL(10, 2), Not Null) *(Price of the variant at checkout)*
 
+### 9. `wishlist`
+Allows logged-in customers to save products for later.
+- `wishlist_id` (INT, Primary Key, Auto Increment)
+- `user_id` (INT, Foreign Key -> users.user_id)
+- `product_id` (INT, Foreign Key -> products.product_id)
+- `added_date` (TIMESTAMP, Default: Current Timestamp)
+- *(Unique Constraint on user_id + product_id to prevent duplicates)*
+
 ---
 
 ## Key Relationships (ERD Logic)
 1. **One-to-Many:** One `Category` has many `Products`.
 2. **One-to-Many:** One `Product` has many `Product_Variants` and many `Product_Images`.
-3. **One-to-Many:** One `User` has many `Orders`.
+3. **One-to-Many:** One `User` has many `Orders` and many `Wishlist` items.
 4. **One-to-Many:** One `Order` has many `Order_Items`.
 5. **Many-to-One:** Many `Order_Items` can reference the same `Product_Variant`.
 
@@ -102,4 +112,4 @@ To ensure <2s response times and efficient querying, the following indexes will 
 ## Notes for Data Science (Phase 9 & 10)
 - The separation of `orders` and `order_items` allows for easy aggregation of sales data (e.g., `SUM(quantity * unit_price)`).
 - `product_variants` allows for granular forecasting (e.g., predicting demand specifically for "Black T-Shirt, Size M" rather than just "T-Shirt").
-- `orders.status` provides the necessary data for RFM (Recency, Frequency, Monetary) customer segmentation.
+- `orders.status` and `orders.payment_method` provide the necessary data for RFM (Recency, Frequency, Monetary) customer segmentation and payment preference analysis.

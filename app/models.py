@@ -115,8 +115,17 @@ class Order(db.Model):
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
     shipping_district = db.Column(db.String(50), nullable=False)
     shipping_address = db.Column(db.Text, nullable=False)
+    payment_method = db.Column(db.String(50), default='Cash on Delivery') 
+    notes = db.Column(db.Text, nullable=True) # <--- The new column we added
 
+    # THIS RELATIONSHIP MUST BE IN THE ORDER CLASS
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+
+    # THIS PROPERTY MUST BE IN THE ORDER CLASS
+    @property
+    def is_cancellable(self):
+        """Order can only be cancelled if status is Pending or Awaiting Payment"""
+        return self.status in ['Pending', 'Awaiting Payment', 'Awaiting Confirmation']
 
 # --- WISHLIST MODEL ---
 class Wishlist(db.Model):

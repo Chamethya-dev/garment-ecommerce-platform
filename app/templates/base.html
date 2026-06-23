@@ -180,7 +180,7 @@
                         <a class="nav-link {% if request.endpoint == 'main.collections' %}active{% endif %}" href="{{ url_for('main.collections') }}">Collections</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="#">Sale</a>
+                        <a class="nav-link text-danger" href="{{ url_for('main.sale') }}">Sale</a>
                     </li>
                 </ul>
             </div>

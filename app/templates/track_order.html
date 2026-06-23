@@ -1,74 +1,130 @@
 {% extends "base.html" %}
 {% block title %}Track Order #{{ order.order_id }}{% endblock %}
-{% block content %}
-<h2>Track Order #{{ order.order_id }}</h2>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <h4>Order Status: 
-            <span class="badge {% if order.status == 'Pending' %}bg-warning
-                         {% elif order.status == 'Processing' %}bg-info
-                         {% elif order.status == 'Shipped' %}bg-primary
-                         {% elif order.status == 'Delivered' %}bg-success
-                         {% else %}bg-secondary{% endif %}">
-                {{ order.status }}
-            </span>
-        </h4>
-        
-        <div class="mt-4">
-            <h5>Order Timeline</h5>
-            <div class="progress" style="height: 30px;">
-                {% set status_progress = {
-                    'Pending': 25,
-                    'Processing': 50,
-                    'Shipped': 75,
-                    'Delivered': 100,
-                    'Cancelled': 0
-                } %}
-                <div class="progress-bar {% if order.status == 'Delivered' %}bg-success{% elif order.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}" 
-                     role="progressbar" style="width: {{ status_progress.get(order.status, 25) }}%">
-                    {{ status_progress.get(order.status, 25) }}%
+{% block content %}
+<style>
+    .cancel-section {
+        background: #fff3cd;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid #ffc107;
+        margin-top: 2rem;
+    }
+    .btn-cancel {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .btn-cancel:hover { background: #c82333; color: #fff; }
+</style>
+
+<div class="container mt-4">
+    <h2>Track Order #{{ order.order_id }}</h2>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h4>Order Status: 
+                <span class="badge {% if order.status == 'Pending' %}bg-warning
+                             {% elif order.status == 'Processing' %}bg-info
+                             {% elif order.status == 'Shipped' %}bg-primary
+                             {% elif order.status == 'Delivered' %}bg-success
+                             {% elif order.status == 'Cancelled' %}bg-danger
+                             {% else %}bg-secondary{% endif %}">
+                    {{ order.status }}
+                </span>
+            </h4>
+            
+            <div class="mt-4">
+                <h5>Order Timeline</h5>
+                <div class="progress" style="height: 30px;">
+                    {% set status_progress = {
+                        'Pending': 25,
+                        'Awaiting Payment': 25,
+                        'Processing': 50,
+                        'Shipped': 75,
+                        'Delivered': 100,
+                        'Cancelled': 0
+                    } %}
+                    <div class="progress-bar {% if order.status == 'Delivered' %}bg-success{% elif order.status == 'Cancelled' %}bg-danger{% else %}bg-primary{% endif %}" 
+                         role="progressbar" style="width: {{ status_progress.get(order.status, 25) }}%">
+                        {{ status_progress.get(order.status, 25) }}%
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small>Pending</small>
+                    <small>Processing</small>
+                    <small>Shipped</small>
+                    <small>Delivered</small>
                 </div>
             </div>
-            <div class="d-flex justify-content-between mt-2">
-                <small>Pending</small>
-                <small>Processing</small>
-                <small>Shipped</small>
-                <small>Delivered</small>
+            
+            <div class="mt-4">
+                <h5>Order Details</h5>
+                <p><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+                <p><strong>District:</strong> {{ order.shipping_district }}</p>
+                <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+                <p><strong>Total Amount:</strong> Rs. {{ order.total_amount }}</p>
             </div>
+            
+            <h5 class="mt-4">Items</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Variant</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.variant.product.name }}</td>
+                        <td>{{ item.variant.color }} - {{ item.variant.size }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>Rs. {{ item.unit_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        
-        <div class="mt-4">
-            <h5>Order Details</h5>
-            <p><strong>Order Date:</strong> {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}</p>
-            <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
-            <p><strong>District:</strong> {{ order.shipping_district }}</p>
-            <p><strong>Total Amount:</strong> Rs. {{ order.total_amount }}</p>
-        </div>
-        
-        <h5 class="mt-4">Items</h5>
-        <table class="table table-sm">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Variant</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in order.items %}
-                <tr>
-                    <td>{{ item.variant.product.name }}</td>
-                    <td>{{ item.variant.color }} - {{ item.variant.size }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>Rs. {{ item.unit_price }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
-</div>
 
-<a href="{{ url_for('main.my_orders') }}" class="btn btn-secondary mt-3">← Back to My Orders</a>
+    <!-- CANCELLATION SECTION -->
+    {% if order.is_cancellable %}
+    <div class="cancel-section">
+        <h5>🚫 Need to Cancel Your Order?</h5>
+        <p>Your order is still in <strong>Pending</strong> status and can be cancelled. Once cancelled, the items will be returned to stock.</p>
+        
+        <form action="{{ url_for('main.cancel_order', order_id=order.order_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Reason for cancellation (optional):</label>
+                <textarea name="cancellation_reason" class="form-control" rows="2" placeholder="Changed my mind / Found better price / Other..."></textarea>
+            </div>
+            <button type="submit" class="btn-cancel">
+                <i class="bi bi-x-circle me-2"></i>Cancel Order
+            </button>
+        </form>
+    </div>
+    {% elif order.status == 'Cancelled' %}
+    <div class="alert alert-danger mt-4">
+        <strong>This order has been cancelled.</strong>
+        {% if order.notes %}
+        <p class="mb-0 mt-2">Reason: {{ order.notes }}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>This order cannot be cancelled.</strong> It has already moved to the {{ order.status }} stage. 
+        If you have any issues, please contact us on WhatsApp.
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('main.my_orders') }}" class="btn btn-secondary mt-3">← Back to My Orders</a>
+</div>
 {% endblock %}

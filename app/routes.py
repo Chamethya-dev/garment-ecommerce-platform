@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
+from app import db
 from app.models import Product, Category, ProductVariant, Order, Wishlist, Collection
 
 main = Blueprint('main', __name__)
@@ -94,6 +95,39 @@ def track_order(order_id):
         return "Unauthorized", 403
     return render_template('track_order.html', order=order)
 
+@main.route('/order/<int:order_id>/cancel', methods=['POST'])
+@login_required
+def cancel_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    
+    # 1. Security Check: Ensure the user owns this order
+    if order.user_id != current_user.user_id:
+        flash('Unauthorized access!', 'danger')
+        return redirect(url_for('main.home'))
+    
+    # 2. Logic Check: Ensure the order can actually be cancelled
+    if not order.is_cancellable:
+        flash(f'Order cannot be cancelled. Current status: {order.status}', 'warning')
+        return redirect(url_for('main.track_order', order_id=order_id))
+    
+    # 3. Restore Stock: Put items back into inventory
+    for item in order.items:
+        variant = ProductVariant.query.get(item.variant_id)
+        if variant:
+            variant.stock_quantity += item.quantity
+            db.session.add(variant)
+    
+    # 4. Update Order Status
+    order.status = 'Cancelled'
+    reason = request.form.get('cancellation_reason', '')
+    if reason:
+        order.notes = f"Cancelled by customer. Reason: {reason}"
+    
+    db.session.commit()
+    
+    flash('Order has been cancelled successfully.', 'success')
+    return redirect(url_for('main.my_orders'))
+
 @main.route('/collections')
 def collections():
     collections = Collection.query.filter_by(is_active=True).order_by(Collection.display_order).all()
@@ -110,3 +144,7 @@ def shipping():
 @main.route('/size-guide')
 def size_guide():
     return render_template('size_guide.html')
+
+@main.route('/sale')
+def sale():
+    return render_template('sale.html')

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Sale - MANSA{% endblock %}
+
+{% block content %}
+<style>
+    .sale-container {
+        max-width: 600px;
+        margin: 5rem auto;
+        text-align: center;
+        padding: 2rem;
+    }
+    .sale-icon {
+        font-size: 4rem;
+        color: #d9534f;
+        margin-bottom: 1.5rem;
+    }
+    .sale-title {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 1rem;
+        color: #000;
+        text-transform: uppercase;
+    }
+    .sale-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+        font-weight: 300;
+    }
+    .btn-shop {
+        display: inline-block;
+        padding: 15px 40px;
+        background: #000;
+        color: #fff;
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    .btn-shop:hover {
+        background: #333;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="sale-container">
+    <div class="sale-icon">
+        <i class="bi bi-tag"></i>
+    </div>
+    <h1 class="sale-title">Sale Coming Soon</h1>
+    <p class="sale-message">
+        We are currently preparing our exclusive sale collection.<br>
+        Please check back later for amazing deals on your favorite pieces!
+    </p>
+    <a href="{{ url_for('main.shop') }}" class="btn-shop">Shop Regular Collection</a>
+</div>
+{% endblock %}

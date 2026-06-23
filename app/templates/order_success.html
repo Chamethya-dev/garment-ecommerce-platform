@@ -1,10 +1,162 @@
 {% extends "base.html" %}
-{% block title %}Order Success{% endblock %}
+{% block title %}Order Confirmed - MANSA{% endblock %}
+
 {% block content %}
-<div class="text-center mt-5">
-    <h1 class="text-success">Order Placed Successfully!</h1>
-    <p class="lead">Thank you for your purchase. Your Order ID is: <strong>#{{ order_id }}</strong></p>
-    <p>We will process your order shortly.</p>
-    <a href="{{ url_for('main.home') }}" class="btn btn-primary mt-3">Return to Home</a>
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+        padding: 2rem;
+    }
+    .success-icon {
+        font-size: 5rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+        animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .order-id {
+        font-size: 1.5rem;
+        font-weight: 300;
+        letter-spacing: 2px;
+        margin-bottom: 2rem;
+        color: #333;
+    }
+    .loading-box {
+        background: #f8f9fa;
+        padding: 2.5rem;
+        border-radius: 12px;
+        border: 1px solid #eaeaea;
+        margin-top: 2rem;
+    }
+    .spinner {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1.5rem;
+        border: 4px solid #e0e0e0;
+        border-top: 4px solid #25D366;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .loading-subtext {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+    .countdown {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #25D366;
+        color: #fff;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+    .btn-whatsapp {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #25D366;
+        color: #fff;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+    .btn-whatsapp:hover {
+        background: #128C7E;
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+    }
+    .btn-home {
+        display: inline-block;
+        margin-top: 2rem;
+        color: #666;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .btn-home:hover { color: #000; }
+</style>
+
+<div class="success-container">
+    <div class="success-icon">
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <h1>Thank You!</h1>
+    <p class="order-id">Your Order #{{ order_id }} has been placed.</p>
+    <p style="color: #666;">We have received your order details. To finalize your order, please confirm it with us on WhatsApp.</p>
+    
+    <div class="loading-box" id="loadingBox">
+        <div class="spinner"></div>
+        <div class="loading-text">Redirecting to WhatsApp...</div>
+        <div class="loading-subtext">
+            If you chose Bank Deposit, please attach your payment slip in the chat!
+        </div>
+        <div class="countdown">
+            <i class="bi bi-clock-fill"></i>
+            <span id="countdown">3</span> seconds
+        </div>
+    </div>
+
+    <!-- Fallback button in case auto-redirect fails -->
+    <div id="fallbackButton" style="display: none;">
+        <a href="{{ whatsapp_url }}" target="_blank" class="btn-whatsapp">
+            <i class="bi bi-whatsapp"></i> Send Order Details
+        </a>
+    </div>
+
+    <a href="{{ url_for('main.home') }}" class="btn-home">← Continue Shopping</a>
 </div>
+
+<script>
+    // Auto-redirect to WhatsApp after 3 seconds
+    let countdown = 3;
+    const countdownElement = document.getElementById('countdown');
+    const loadingBox = document.getElementById('loadingBox');
+    const fallbackButton = document.getElementById('fallbackButton');
+    const whatsappUrl = "{{ whatsapp_url }}";
+    
+    // Update countdown every second
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+    
+    // Redirect after 3 seconds
+    setTimeout(() => {
+        // Hide loading box, show button (in case redirect fails)
+        loadingBox.style.display = 'none';
+        fallbackButton.style.display = 'block';
+        
+        // Open WhatsApp
+        window.open(whatsappUrl, '_blank');
+        
+        // Also try to redirect the current window
+        window.location.href = whatsappUrl;
+    }, 3000);
+</script>
 {% endblock %}

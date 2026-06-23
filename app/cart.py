@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from decimal import Decimal
+import urllib.parse
 from app import db
 from app.models import ProductVariant, Order, OrderItem, ShippingZone
 
@@ -19,7 +20,6 @@ def view_cart():
             subtotal = price * qty
             total += subtotal
             
-            # Check if stock is sufficient
             stock_status = 'in_stock'
             if variant.stock_quantity < qty:
                 stock_status = 'low_stock' if variant.stock_quantity > 0 else 'out_of_stock'
@@ -40,22 +40,18 @@ def add_to_cart():
     variant_id = str(request.form.get('variant_id'))
     quantity = int(request.form.get('quantity', 1))
     
-    # Check if variant exists
     variant = ProductVariant.query.get(variant_id)
     if not variant:
         flash('Product variant not found!', 'danger')
         return redirect(url_for('main.shop'))
     
-    # Check stock availability
     if variant.stock_quantity < quantity:
         flash(f'Sorry, we only have {variant.stock_quantity} unit(s) in stock for {variant.product.name}.', 'warning')
         return redirect(url_for('main.product_detail', product_id=variant.product_id))
     
-    # Check if already in cart
     user_cart = session.get('cart', {})
     current_qty_in_cart = user_cart.get(variant_id, 0)
     
-    # Check if adding more would exceed stock
     if current_qty_in_cart + quantity > variant.stock_quantity:
         available = variant.stock_quantity - current_qty_in_cart
         if available <= 0:
@@ -64,7 +60,6 @@ def add_to_cart():
             flash(f'Only {available} more unit(s) can be added. Stock limit reached.', 'warning')
         return redirect(url_for('main.product_detail', product_id=variant.product_id))
     
-    # Add to cart
     if variant_id in user_cart:
         user_cart[variant_id] += quantity
     else:
@@ -82,16 +77,14 @@ def update_cart():
     variant = ProductVariant.query.get(variant_id)
     
     if quantity <= 0:
-        # Remove from cart
         user_cart = session.get('cart', {})
         user_cart.pop(variant_id, None)
         session['cart'] = user_cart
         flash('Item removed from cart.', 'info')
     elif variant:
-        # Check stock limit
         if quantity > variant.stock_quantity:
             flash(f'Sorry, we only have {variant.stock_quantity} unit(s) in stock for {variant.product.name}.', 'warning')
-            quantity = variant.stock_quantity  # Adjust to max available
+            quantity = variant.stock_quantity
         
         user_cart = session.get('cart', {})
         user_cart[variant_id] = quantity
@@ -118,7 +111,6 @@ def checkout():
         flash('Your cart is empty!', 'warning')
         return redirect(url_for('main.shop'))
     
-    # Validate stock before checkout
     for variant_id, qty in cart_items.items():
         variant = ProductVariant.query.get(variant_id)
         if not variant or variant.stock_quantity < qty:
@@ -142,15 +134,19 @@ def place_order():
     if not cart_items:
         return redirect(url_for('main.shop'))
         
-    # FIX: Use Decimal instead of float for financial calculations
     delivery_fee = Decimal(request.form.get('delivery_fee', 0))
     shipping_district = request.form.get('shipping_district', 'Unknown')
     shipping_address = request.form.get('shipping_address', '')
+    payment_method = request.form.get('payment_method', 'Cash on Delivery')
+    
+    if payment_method == 'Bank Deposit':
+        order_status = 'Awaiting Payment'
+    else:
+        order_status = 'Pending'
     
     subtotal = Decimal(0)
     order_items_data = []
     
-    # Final stock validation before placing order
     for variant_id, qty in cart_items.items():
         variant = ProductVariant.query.get(variant_id)
         if not variant:
@@ -173,7 +169,9 @@ def place_order():
         delivery_fee=delivery_fee,
         total_amount=total_amount,
         shipping_district=shipping_district,
-        shipping_address=shipping_address
+        shipping_address=shipping_address,
+        payment_method=payment_method,
+        status=order_status
     )
     db.session.add(new_order)
     db.session.flush() 
@@ -186,11 +184,38 @@ def place_order():
             unit_price=item['price']
         )
         db.session.add(order_item)
-        # Deduct stock
         item['variant'].stock_quantity -= item['qty']
         
     db.session.commit()
     session['cart'] = {}
     
+    # --- WHATSAPP MESSAGE GENERATION ---
+    saved_order = Order.query.get(new_order.order_id)
+    items_list = "\n".join([f"- {item.variant.product.name} ({item.variant.size}) x{item.quantity}" for item in saved_order.items])
+    
+    message = f"🌸 *NEW ORDER - MANSA Clothing*\n\n"
+    message += f"*Order ID:* #{saved_order.order_id}\n"
+    message += f"*Customer:* {current_user.name}\n"
+    message += f"*Phone:* {current_user.phone}\n\n"
+    message += f" *Items:*\n{items_list}\n\n"
+    message += f"💰 *Subtotal:* Rs. {saved_order.subtotal}\n"
+    message += f"🚚 *Delivery ({saved_order.shipping_district}):* Rs. {saved_order.delivery_fee}\n"
+    message += f" *TOTAL:* Rs. {saved_order.total_amount}\n\n"
+    message += f"📍 *Delivery Address:*\n{saved_order.shipping_address}\n\n"
+    
+    if saved_order.payment_method == 'Bank Deposit':
+        message += f" *Payment:* Bank Deposit\n"
+        message += f"🏦 Bank: BOC Akuressa\n"
+        message += f"📎 *I will send the payment slip in the next message.*\n\n"
+    else:
+        message += f"💳 *Payment:* Cash on Delivery\n"
+        message += f"💵 *Amount to Pay:* Rs. {saved_order.total_amount} (in cash)\n\n"
+        
+    message += "Please confirm my order. Thank you!"
+
+    encoded_message = urllib.parse.quote(message.encode('utf-8'))
+    whatsapp_number = "94771391827" # <--- CHANGE THIS TO YOUR NUMBER
+    whatsapp_url = f"https://wa.me/{whatsapp_number}?text={encoded_message}"
+    
     flash('Order placed successfully!', 'success')
-    return render_template('order_success.html', order_id=new_order.order_id)
+    return render_template('order_success.html', order_id=new_order.order_id, whatsapp_url=whatsapp_url)
